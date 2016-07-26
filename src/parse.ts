@@ -1,27 +1,44 @@
 import Swagger from './Swagger';
 import Paths from './Paths';
+import PathItem from './PathItem';
 import * as xml2js from 'xml2js';
 
-function parseEntityType(entityType: { [key: string]: any }): Paths {
-  console.log(entityType);
-
+function parseEntityType(entityType: { [key: string]: any }): PathItem {
   return null
 }
 
 function parseDataService(dataService: { [key: string]: any }): Paths {
-  const schemas: Array<any> = dataService['Schema'];
+  const [ entityTypeSchema, entityContainerSchema ] = dataService['Schema'];
 
-  const entityTypes: Array<any> = schemas.reduce((result, schema) => {
-    return result.concat(schema['EntityType']);
-  }, []);
+  const [ entityContainer ] = entityContainerSchema['EntityContainer']
 
-  return entityTypes.reduce((paths, entityType) => {
-    return Object.assign(paths, parseEntityType(entityType))
+  const entitySets = entityContainer['EntitySet'];
+
+  const entityTypeToPath = entitySets.reduce((result, entitySet) => {
+    const attributes = entitySet['$'];
+
+    return Object.assign(result, {
+      [attributes['EntityType']]: attributes['Name']
+    });
+  }, {});
+
+  const entityTypes: Array<any> = entityTypeSchema['EntityType'];
+
+  const ns = entityTypeSchema['$']['Namespace']
+
+  return entityTypes.reduce((paths: Paths, entityType) => {
+    const name = entityType['$']['Name'];
+    const type = `${ns}.${name}`;
+    const path = `/${entityTypeToPath[type]}`;
+
+    paths[path] = parseEntityType(entityType);
+
+    return paths;
   }, {});
 }
 
 function parsePaths(dataServices: Array<any>): Paths {
-  return <Paths>Object.assign({}, dataServices.map(parseDataService));
+  return <Paths>Object.assign({}, ...dataServices.map(parseDataService));
 }
 
 function parse(host: string, path: string, xml: string): Promise<Swagger> {
