@@ -1,12 +1,13 @@
+import * as url from 'url';
+
 import Swagger from './Swagger';
 import get from './get';
+import parse from './parse';
 
-function parse(xml: string): Promise<Swagger> {
-  return Promise.resolve(null);
-}
+function odata2openapi(metadataUrl: string): Promise<Swagger> {
+  const { path, host } = url.parse(metadataUrl);
 
-function odata2openapi(metadataUrl:string) : Promise<Swagger> {
-  return get(metadataUrl).then(parse)
+  return get(host, path).then(xml => parse(host, path, xml))
 }
 
 export default odata2openapi;

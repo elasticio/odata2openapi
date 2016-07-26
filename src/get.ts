@@ -1,18 +1,15 @@
 import * as http from 'http';
-import * as url from 'url';
 
-function get(uri: string): Promise<string> {
+function get(host, path): Promise<string> {
   return new Promise((resolve, reject) => {
-    const urlObject = url.parse(uri);
-
     const options = {
-      host: urlObject.host,
+      host,
       method: 'GET',
       headers: {
         'Accept': '*/*',
         'User-Agent': 'odata2openapi'
       },
-      path: urlObject.path
+      path
     };
 
     const request = http.request(options, (response) => {
