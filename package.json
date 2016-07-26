@@ -9,6 +9,7 @@
   "typings": "./dist/index.d.ts",
   "scripts": {
     "build": "rm -rf dist && mkdir dist && tsc --declaration --outDir dist",
+    "start": "npm run build && node dist/example/index.js",
     "prepublish": "npm run build"
   },
   "repository": {
