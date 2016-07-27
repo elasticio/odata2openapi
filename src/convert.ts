@@ -102,7 +102,7 @@ function definitions(entitySets: Array<EntitySet>): Definitions {
   };
 
   entitySets.forEach(entitySet => {
-    const type = `${entitySet.name}.${entitySet.entityType.name}`;
+    const type = `${entitySet.namespace}.${entitySet.entityType.name}`;
 
     definitions[type] = schema(entitySet.entityType);
   });

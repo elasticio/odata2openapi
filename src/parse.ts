@@ -5,14 +5,18 @@ import EntityType from './EntityType';
 import EntityProperty from './EntityProperty';
 
 function parseEntitySets(namespace: string, entityContainer: any, entityTypes: any): Array<EntitySet> {
-  return entityContainer['EntitySet'].map(entitySet => parseEntitySet(namespace, entitySet, entityTypes));
+  return entityContainer['EntitySet'].map(entitySet => {
+    const type = entitySet['$']['EntityType'].split('.').pop();
+
+    const entityType = entityTypes.find(entity => entity['$']['Name'] == type);
+
+    if (entityType) {
+      return parseEntitySet(namespace, entitySet, entityType);
+    }
+  }).filter(entitySet => !!entitySet);
 }
 
-function parseEntitySet(namespace: string, entitySet: any, entityTypes: any): EntitySet {
-  const type = entitySet['$']['EntityType'].split('.').pop();
-
-  const entityType = entityTypes.find(entity => entity['$']['Name'] == type);
-
+function parseEntitySet(namespace: string, entitySet: any, entityType: any): EntitySet {
   return {
     namespace,
     name: entitySet['$']['Name'],
@@ -55,15 +59,27 @@ function parse(xml: string): Promise<Array<EntitySet>> {
         return reject(error);
       }
 
-      const [dataService] = metadata['edmx:Edmx']['edmx:DataServices']
+      const [dataServices] = metadata['edmx:Edmx']['edmx:DataServices']
 
-      const [entityTypeSchema, entityContainerSchema] = dataService['Schema'];
+      const schemas = dataServices['Schema'];
 
-      const [entityContainer] = entityContainerSchema['EntityContainer'];
+      const entityContainerSchema = schemas.find(schema => schema['EntityContainer'])
 
-      const namespace = entityTypeSchema['$']['Namespace']
+      if (!entityContainerSchema) {
+        reject(new Error('Cannot find EntityContainer element.'));
+      }
 
-      const entitySets = parseEntitySets(namespace, entityContainer, entityTypeSchema['EntityType'])
+      const [entityContainer] = entityContainerSchema['EntityContainer']
+
+      const entitySets: Array<EntitySet> = [];
+
+      schemas.forEach(schema => {
+        if (schema['EntityType']) {
+          const namespace = schema['$']['Namespace'];
+          const entityTypes = schema['EntityType'];
+          entitySets.push(...parseEntitySets(namespace, entityContainer, entityTypes));
+        }
+      });
 
       resolve(entitySets);
     });
