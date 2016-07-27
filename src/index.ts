@@ -25,3 +25,19 @@ export {
   convert,
   parse
 }
+
+export * from './Swagger';
+export * from './Definitions';
+export * from './EntityProperty';
+export * from './EntityType';
+export * from './EntitySet';
+export * from './Operation';
+export * from './Operation';
+export * from './Paths';
+export * from './Property';
+export * from './Schema';
+export * from './PathItem';
+export * from './Operation';
+export * from './Definitions';
+export * from './Options';
+export * from './Parameter';
