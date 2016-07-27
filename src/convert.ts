@@ -9,6 +9,7 @@ import Options from './Options';
 import EntitySet from './EntitySet';
 import EntityType from './EntityType';
 import EntityProperty from './EntityProperty';
+import Parameter from './Parameter';
 
 const defaultResponse = {
   description: 'Unexpected error',
@@ -17,7 +18,7 @@ const defaultResponse = {
   }
 }
 
-function getOperation(entitySet: EntitySet): Operation {
+function entitySetGet(entitySet: EntitySet): Operation {
   return {
     operationId: `get${entitySet.name}`,
     responses: {
@@ -35,9 +36,7 @@ function getOperation(entitySet: EntitySet): Operation {
   };
 }
 
-function postOperation(entitySet: EntitySet): Operation {
-  const success = `${entitySet.entityType.name} was successfully created.`;
-
+function entitySetPost(entitySet: EntitySet): Operation {
   return {
     operationId: `create${entitySet.name}`,
     parameters: [
@@ -51,11 +50,8 @@ function postOperation(entitySet: EntitySet): Operation {
       }
     ],
     responses: {
-      '201': {
-        description: success
-      },
       '204': {
-        description: success
+        description: 'Empty response.'
       },
       default: defaultResponse
     }
@@ -64,18 +60,111 @@ function postOperation(entitySet: EntitySet): Operation {
 
 function entitySetOperations(entitySet: EntitySet): PathItem {
   return {
-    get: getOperation(entitySet),
-    post: postOperation(entitySet)
+    get: entitySetGet(entitySet),
+    post: entitySetPost(entitySet)
   };
 }
 
+function entityTypeOperations(entitySet: EntitySet): PathItem {
+  return {
+    get: entityTypeGet(entitySet),
+    delete: entityTypeDelete(entitySet),
+    patch: entityTypePatch(entitySet)
+  };
+}
+
+function entityTypeGet(entitySet: EntitySet): Operation {
+  return {
+    operationId: `get${entitySet.entityType.name}`,
+    parameters: entitySet.entityType.key.map(property => {
+      return {
+        name: property.name,
+        required: true,
+        in: 'path'
+      };
+    }),
+    responses: {
+      '200': {
+        description: `A ${entitySet.entityType.name}.`,
+        schema: {
+          $ref: `#/definitions/${entitySet.namespace}.${entitySet.entityType.name}`
+        }
+      },
+      default: defaultResponse
+    }
+  };
+}
+
+function entityTypeDelete(entitySet: EntitySet): Operation {
+  return {
+    operationId: `delete${entitySet.entityType.name}`,
+    parameters: entitySet.entityType.key.map(property => {
+      return {
+        name: property.name,
+        required: true,
+        in: 'path'
+      };
+    }),
+    responses: {
+      '204': {
+        description: `Empty response.`,
+      },
+      default: defaultResponse
+    }
+  };
+}
+function entityTypePatch(entitySet: EntitySet): Operation {
+  const parameters: Array<Parameter> = entitySet.entityType.key.map(property => {
+    return {
+      name: property.name,
+      required: true,
+      in: 'path'
+    };
+  });
+
+  parameters.push({
+    name: entitySet.entityType.name,
+    in: 'body',
+    required: true,
+    schema: {
+      $ref: `#/definitions/${entitySet.namespace}.${entitySet.entityType.name}`
+    }
+  });
+
+  return {
+    operationId: `update${entitySet.entityType.name}`,
+    parameters,
+    responses: {
+      '204': {
+        description: `Empty response.`,
+      },
+      default: defaultResponse
+    }
+  };
+}
 function paths(entitySets: Array<EntitySet>): Paths {
   const paths: Paths = {};
 
   entitySets.forEach(entitySet => {
-    const path = `/${entitySet.name}`;
+    paths[`/${entitySet.name}`] = entitySetOperations(entitySet);
 
-    paths[path] = entitySetOperations(entitySet);
+    if (entitySet.entityType.key) {
+      const keys = entitySet.entityType.key.map(property => {
+        switch (property.type) {
+          case 'Edm.Int16':
+          case 'Edm.Int32':
+          case 'Edm.Int64':
+          case 'Edm.Double':
+            return `{${property.name}}`
+        }
+
+        return `'{${property.name}}'`
+      });
+
+      const path = `/${entitySet.name}(${keys.join(',')})`
+
+      paths[path] = entityTypeOperations(entitySet)
+    }
   });
 
   return paths;
@@ -105,6 +194,7 @@ function definitions(entitySets: Array<EntitySet>): Definitions {
     const type = `${entitySet.namespace}.${entitySet.entityType.name}`;
 
     definitions[type] = schema(entitySet.entityType);
+
   });
 
   return definitions;
