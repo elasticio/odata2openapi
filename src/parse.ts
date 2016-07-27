@@ -9,20 +9,36 @@ function parseEntitySets(namespace: string, entityContainer: any, entityTypes: a
 }
 
 function parseEntitySet(namespace: string, entitySet: any, entityTypes: any): EntitySet {
-  const entityType = entitySet['$']['EntityType'].split('.').pop()
+  const type = entitySet['$']['EntityType'].split('.').pop();
+
+  const entityType = entityTypes.find(entity => entity['$']['Name'] == type);
 
   return {
     namespace,
     name: entitySet['$']['Name'],
-    entityType: parseEntityType(entityTypes.find(entity => entity['$']['Name'] == entityType))
+    entityType: parseEntityType(entityType)
   }
 }
 
 function parseEntityType(entityType: any): EntityType {
-  return {
+  const result: EntityType = {
     name: entityType['$']['Name'],
     properties: entityType['Property'].map(parseProperty)
   };
+
+  const keys = entityType['Key'];
+
+  if (keys && keys.length > 0) {
+    result.key = parseKey(keys[0], result.properties)
+  }
+
+  return result;
+}
+
+function parseKey(key: any, properties: Array<EntityProperty>): Array<EntityProperty> {
+  const refs = key['PropertyRef'].map(propertyRef => propertyRef['$']['Name'])
+
+  return properties.filter(property => refs.includes(property.name));
 }
 
 function parseProperty(property: any) {

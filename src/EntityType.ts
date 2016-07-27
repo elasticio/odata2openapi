@@ -2,7 +2,7 @@ import EntityProperty from './EntityProperty';
 
 interface EntityType {
   name: string;
-  key?: Array<string>;
+  key?: Array<EntityProperty>;
   properties: Array<EntityProperty>;
 }
 
