@@ -73,16 +73,29 @@ function entityTypeOperations(entitySet: EntitySet): PathItem {
   };
 }
 
+function keyParameters(entitySet: EntitySet): Array<Parameter> {
+  return entitySet.entityType.key.map(entityProperty => {
+    const { type, format } = property(entityProperty.type);
+
+    const parameter: Parameter = {
+      name: entityProperty.name,
+      required: true,
+      in: 'path',
+      type
+    };
+
+    if (format) {
+      parameter.format = format;
+    }
+
+    return parameter;
+  });
+}
+
 function entityTypeGet(entitySet: EntitySet): Operation {
   return {
     operationId: `get${entitySet.entityType.name}`,
-    parameters: entitySet.entityType.key.map(property => {
-      return {
-        name: property.name,
-        required: true,
-        in: 'path'
-      };
-    }),
+    parameters: keyParameters(entitySet),
     responses: {
       '200': {
         description: `A ${entitySet.entityType.name}.`,
@@ -98,13 +111,7 @@ function entityTypeGet(entitySet: EntitySet): Operation {
 function entityTypeDelete(entitySet: EntitySet): Operation {
   return {
     operationId: `delete${entitySet.entityType.name}`,
-    parameters: entitySet.entityType.key.map(property => {
-      return {
-        name: property.name,
-        required: true,
-        in: 'path'
-      };
-    }),
+    parameters: keyParameters(entitySet),
     responses: {
       '204': {
         description: `Empty response.`,
@@ -114,13 +121,7 @@ function entityTypeDelete(entitySet: EntitySet): Operation {
   };
 }
 function entityTypePatch(entitySet: EntitySet): Operation {
-  const parameters: Array<Parameter> = entitySet.entityType.key.map(property => {
-    return {
-      name: property.name,
-      required: true,
-      in: 'path'
-    };
-  });
+  const parameters = keyParameters(entitySet);
 
   parameters.push({
     name: entitySet.entityType.name,
@@ -248,6 +249,10 @@ function property(type: string): Property {
       property.type = 'number';
       property.format = 'double';
       break;
+    case 'Edm.Guid':
+      property.type = 'string';
+      property.format = 'uuid';
+      break;
     case 'Edm.Single':
       property.type = 'number';
       property.format = 'single';
@@ -262,7 +267,7 @@ function convert(entitySets, options: Options): Swagger {
     swagger: '2.0',
     host: options.host,
     produces: ['application/json'],
-    basePath: options.basePath,
+    basePath: options.basePath || '/',
     info: {
       title: 'OData Service',
       version: '0.0.1'

@@ -5,6 +5,8 @@ interface Parameter {
   in: string;
   required: boolean;
   schema?: Reference;
+  type?: string;
+  format?: string;
 }
 
 export default Parameter;
