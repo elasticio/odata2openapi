@@ -20,7 +20,14 @@ function get(host, path): Promise<string> {
       })
 
       response.on('end', () => {
-        resolve(result);
+        const { statusCode, headers } = response
+        if (statusCode >= 300 && statusCode < 400) {
+          get(host, headers['location']).then(resolve, reject);
+        } else if (statusCode >= 200 && statusCode < 300) {
+          resolve(result);
+        } else {
+          reject(new Error(`Unexpected response: ${response}`));
+        }
       })
     });
 
