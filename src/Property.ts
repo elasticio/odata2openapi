@@ -8,6 +8,7 @@ interface Property {
   maximum?: number;
   default?: any;
   items?: Schema | Reference;
+  properties?: {[propertyName: string]: Property};
 }
 
 export default Property;
