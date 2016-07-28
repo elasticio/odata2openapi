@@ -1,7 +1,5 @@
-import Schema from './Schema';
+import { Schema } from './Schema';
 
-interface Definitions {
+export interface Definitions {
   [name: string]: Schema;
 }
-
-export default Definitions;

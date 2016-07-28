@@ -1,7 +1,7 @@
 import * as url from 'url';
 
-import Swagger from './Swagger';
-import Options from './Options';
+import { Swagger } from './Swagger';
+import { Options } from './Options';
 import get from './get';
 import parse from './parse';
 import convert from './convert';

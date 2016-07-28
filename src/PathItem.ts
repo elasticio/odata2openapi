@@ -1,6 +1,6 @@
-import Operation from './Operation';
+import { Operation } from './Operation';
 
-interface PathItem {
+export interface PathItem {
   get?: Operation;
   put?: Operation;
   post?: Operation;
@@ -9,5 +9,3 @@ interface PathItem {
   head?: Operation;
   patch?: Operation;
 }
-
-export default PathItem;

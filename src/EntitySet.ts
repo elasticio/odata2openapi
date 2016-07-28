@@ -1,9 +1,7 @@
-import EntityType from './EntityType';
+import { EntityType } from './EntityType';
 
-interface EntitySet {
+export interface EntitySet {
   name: string;
   entityType: EntityType;
   namespace: string;
 }
-
-export default EntitySet;

@@ -1,6 +1,6 @@
-import Reference from './Reference';
+import { Reference } from './Reference';
 
-interface Parameter {
+export interface Parameter {
   name: string;
   in: string;
   required: boolean;
@@ -8,5 +8,3 @@ interface Parameter {
   type?: string;
   format?: string;
 }
-
-export default Parameter;

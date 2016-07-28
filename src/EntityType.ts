@@ -1,9 +1,7 @@
-import EntityProperty from './EntityProperty';
+import { EntityProperty } from './EntityProperty';
 
-interface EntityType {
+export interface EntityType {
   name: string;
   key?: Array<EntityProperty>;
   properties: Array<EntityProperty>;
 }
-
-export default EntityType;

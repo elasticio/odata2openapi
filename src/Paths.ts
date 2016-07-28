@@ -1,7 +1,5 @@
-import PathItem from './PathItem';
+import { PathItem } from './PathItem';
 
-interface Paths {
+export interface Paths {
   [path: string]: PathItem;
 }
-
-export default Paths;

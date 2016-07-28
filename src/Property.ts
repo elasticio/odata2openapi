@@ -1,7 +1,7 @@
-import Reference from './Reference';
-import Schema from './Schema';
+import { Reference } from './Reference';
+import { Schema } from './Schema';
 
-interface Property {
+export interface Property {
   type: string;
   format?: string;
   minimum?: number;
@@ -10,5 +10,3 @@ interface Property {
   items?: Schema | Reference;
   properties?: {[propertyName: string]: Property};
 }
-
-export default Property;

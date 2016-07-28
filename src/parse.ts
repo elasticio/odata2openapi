@@ -1,8 +1,8 @@
 import * as xml2js from 'xml2js';
 
-import EntitySet from './EntitySet';
-import EntityType from './EntityType';
-import EntityProperty from './EntityProperty';
+import { EntitySet } from './EntitySet';
+import { EntityType } from './EntityType';
+import { EntityProperty } from './EntityProperty';
 
 function parseEntitySets(namespace: string, entityContainer: any, entityTypes: any): Array<EntitySet> {
   return entityContainer['EntitySet'].map(entitySet => {

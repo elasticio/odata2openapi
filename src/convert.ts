@@ -1,15 +1,15 @@
-import Swagger from './Swagger';
-import Paths from './Paths';
-import Property from './Property';
-import Schema from './Schema';
-import PathItem from './PathItem';
-import Operation from './Operation';
-import Definitions from './Definitions';
-import Options from './Options';
-import EntitySet from './EntitySet';
-import EntityType from './EntityType';
-import EntityProperty from './EntityProperty';
-import Parameter from './Parameter';
+import { Swagger } from './Swagger';
+import { Paths } from './Paths';
+import { Property } from './Property';
+import { Schema } from './Schema';
+import { PathItem } from './PathItem';
+import { Operation } from './Operation';
+import { Definitions } from './Definitions';
+import { Options } from './Options';
+import { EntitySet } from './EntitySet';
+import { EntityType } from './EntityType';
+import { EntityProperty } from './EntityProperty';
+import { Parameter } from './Parameter';
 
 const defaultResponse = {
   description: 'Unexpected error',
