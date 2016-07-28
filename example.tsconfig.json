@@ -9,7 +9,6 @@
   },
   "exclude": [
     "dist",
-    "node_modules",
-    "example"
+    "node_modules"
   ]
 }
