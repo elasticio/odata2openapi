@@ -18,9 +18,21 @@ const defaultResponse = {
   }
 }
 
+const registeredOperations = new Set<string>();
+
+function verifyOperationIdUniqueness(operationId: string): string {
+  if (registeredOperations.has(operationId)) {
+    throw new Error(`${operationId} is a duplicate operationId.`);
+  }
+
+  registeredOperations.add(operationId);
+
+  return operationId;
+}
+
 function entitySetGet(entitySet: EntitySet): Operation {
   return {
-    operationId: `get${entitySet.name}`,
+    operationId: verifyOperationIdUniqueness(`get${entitySet.name}`),
     responses: {
       '200': {
         description: `List of ${entitySet.entityType.name}`,
@@ -38,7 +50,7 @@ function entitySetGet(entitySet: EntitySet): Operation {
 
 function entitySetPost(entitySet: EntitySet): Operation {
   return {
-    operationId: `create${entitySet.name}`,
+    operationId: verifyOperationIdUniqueness(`create${entitySet.name}`),
     parameters: [
       {
         name: entitySet.entityType.name,
@@ -94,7 +106,7 @@ function keyParameters(entitySet: EntitySet): Array<Parameter> {
 
 function entityTypeGet(entitySet: EntitySet): Operation {
   return {
-    operationId: `get${entitySet.entityType.name}`,
+    operationId: verifyOperationIdUniqueness(`get${entitySet.entityType.name}ById`),
     parameters: keyParameters(entitySet),
     responses: {
       '200': {
@@ -110,7 +122,7 @@ function entityTypeGet(entitySet: EntitySet): Operation {
 
 function entityTypeDelete(entitySet: EntitySet): Operation {
   return {
-    operationId: `delete${entitySet.entityType.name}`,
+    operationId: verifyOperationIdUniqueness(`delete${entitySet.entityType.name}`),
     parameters: keyParameters(entitySet),
     responses: {
       '204': {
@@ -133,7 +145,7 @@ function entityTypePatch(entitySet: EntitySet): Operation {
   });
 
   return {
-    operationId: `update${entitySet.entityType.name}`,
+    operationId: verifyOperationIdUniqueness(`update${entitySet.entityType.name}`),
     parameters,
     responses: {
       '204': {
@@ -143,6 +155,7 @@ function entityTypePatch(entitySet: EntitySet): Operation {
     }
   };
 }
+
 function paths(entitySets: Array<EntitySet>): Paths {
   const paths: Paths = {};
 
