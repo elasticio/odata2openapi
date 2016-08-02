@@ -41,3 +41,5 @@ export * from './Operation';
 export * from './Definitions';
 export * from './Options';
 export * from './Parameter';
+export * from './Reference';
+export * from './Response';
