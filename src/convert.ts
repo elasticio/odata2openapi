@@ -50,7 +50,7 @@ function entitySetGet(entitySet: EntitySet): Operation {
 
 function entitySetPost(entitySet: EntitySet): Operation {
   return {
-    operationId: verifyOperationIdUniqueness(`create${entitySet.name}`),
+    operationId: verifyOperationIdUniqueness(`create${entitySet.entityType.name}`),
     parameters: [
       {
         name: entitySet.entityType.name,
