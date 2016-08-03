@@ -37,9 +37,14 @@ function entitySetGet(entitySet: EntitySet): Operation {
       '200': {
         description: `List of ${entitySet.entityType.name}`,
         schema: {
-          type: 'array',
-          items: {
-            $ref: `#/definitions/${entitySet.namespace}.${entitySet.entityType.name}`
+          type: 'object',
+          properties: {
+            value: {
+              type: 'array',
+              items: {
+                $ref: `#/definitions/${entitySet.namespace}.${entitySet.entityType.name}`
+              }
+            }
           }
         }
       },
