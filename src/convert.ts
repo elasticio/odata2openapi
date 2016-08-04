@@ -280,7 +280,11 @@ function property(type: string): Property {
   return property;
 }
 
-function convert(entitySets, options: Options): Swagger {
+function filter(entitySets: Array<EntitySet>, wanted: Array<string>): Array<EntitySet> {
+  return entitySets.filter(entitySet => wanted.includes(entitySet.name))
+}
+
+function convert(entitySets: Array<EntitySet>, options: Options): Swagger {
   registeredOperations.clear();
 
   return {
@@ -292,7 +296,7 @@ function convert(entitySets, options: Options): Swagger {
       title: 'OData Service',
       version: '0.0.1'
     },
-    paths: paths(entitySets),
+    paths: paths(options.include ? filter(entitySets, options.include) : entitySets),
     definitions: definitions(entitySets)
   };
 }
