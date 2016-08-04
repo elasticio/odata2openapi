@@ -281,6 +281,8 @@ function property(type: string): Property {
 }
 
 function convert(entitySets, options: Options): Swagger {
+  registeredOperations.clear();
+
   return {
     swagger: '2.0',
     host: options.host,
