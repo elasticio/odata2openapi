@@ -43,3 +43,6 @@ export * from './Options';
 export * from './Parameter';
 export * from './Reference';
 export * from './Response';
+export * from './SecurityDefinition';
+export * from './SecurityDefinitions';
+export * from './SecurityRequirement';
