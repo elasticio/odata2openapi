@@ -1,6 +1,6 @@
 {
   "name": "odata2openapi",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Convert OData metadata document to OpenAPI (fka Swagger) format",
   "files": [
     "dist"
