@@ -14,6 +14,6 @@ export interface Swagger {
   paths: Paths;
   produces: Array<string>;
   definitions: Definitions;
-  security?: SecurityRequirement;
+  security?: Array<SecurityRequirement>;
   securityDefinitions?: SecurityDefinitions;
 }
