@@ -47,7 +47,7 @@ function entitySetGet(entitySet: EntitySet): Operation {
         in: 'query'
       },
       {
-        name: '$skipt',
+        name: '$skip',
         type: 'integer',
         required: false,
         in: 'query'
