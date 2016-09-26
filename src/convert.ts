@@ -33,6 +33,26 @@ function verifyOperationIdUniqueness(operationId: string): string {
 function entitySetGet(entitySet: EntitySet): Operation {
   return {
     operationId: verifyOperationIdUniqueness(`get${entitySet.name}`),
+    parameters: [
+      {
+        name: '$filter',
+        type: 'string',
+        required: false,
+        in: 'query'
+      },
+      {
+        name: '$take',
+        type: 'integer',
+        required: false,
+        in: 'query'
+      },
+      {
+        name: '$skipt',
+        type: 'integer',
+        required: false,
+        in: 'query'
+      }
+    ],
     responses: {
       '200': {
         description: `List of ${entitySet.entityType.name}`,
