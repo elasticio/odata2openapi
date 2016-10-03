@@ -2,8 +2,11 @@ import * as http from 'http';
 
 function get(host, path): Promise<string> {
   return new Promise((resolve, reject) => {
+  	let hostSplit = host.split(':');
+  
     const options = {
-      host,
+      hostname: hostSplit[0],
+      port: hostSplit.length > 1 ? hostSplit[1] : 80,
       method: 'GET',
       headers: {
         'Accept': '*/*',
