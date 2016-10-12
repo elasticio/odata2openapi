@@ -280,6 +280,7 @@ function property(type: string): Property {
     case 'Edm.Date':
       property.format = 'date';
       break;
+    case 'Edm.DateTime':
     case 'Edm.DateTimeOffset':
       property.format = 'date-time';
       break;
