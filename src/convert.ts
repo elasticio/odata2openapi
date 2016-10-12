@@ -240,9 +240,12 @@ function definitions(entitySets: Array<EntitySet>): Definitions {
 }
 
 function schema(entityType: EntityType): Schema {
+  const required = entityType.properties.filter(property => property.required).map(property => property.name);
+
   return {
     type: 'object',
-    properties: properties(entityType.properties)
+    properties: properties(entityType.properties),
+    required: required
   };
 }
 
@@ -276,9 +279,6 @@ function property(type: string): Property {
       break;
     case 'Edm.Byte':
       property.format = 'byte';
-      break;
-    case 'Edm.Date':
-      property.format = 'date';
       break;
     case 'Edm.DateTime':
     case 'Edm.DateTimeOffset':

@@ -47,6 +47,7 @@ function parseKey(key: any, properties: Array<EntityProperty>): Array<EntityProp
 
 function parseProperty(property: any) {
   return {
+    required: property['$']['Nullable'] == 'false',
     name: property['$']['Name'],
     type: property['$']['Type']
   };
