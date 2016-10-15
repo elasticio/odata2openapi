@@ -194,6 +194,8 @@ function paths(entitySets: Array<EntitySet>): Paths {
           case 'Edm.Int32':
           case 'Edm.Int64':
           case 'Edm.Double':
+          case 'Edm.Single':
+          case 'Edm.Decimal':
             return `{${property.name}}`
         }
 
@@ -284,6 +286,7 @@ function property(type: string): Property {
     case 'Edm.DateTimeOffset':
       property.format = 'date-time';
       break;
+    case 'Edm.Decimal':
     case 'Edm.Double':
       property.type = 'number';
       property.format = 'double';
