@@ -244,11 +244,16 @@ function definitions(entitySets: Array<EntitySet>): Definitions {
 function schema(entityType: EntityType): Schema {
   const required = entityType.properties.filter(property => property.required).map(property => property.name);
 
-  return {
+  const schema: Schema = {
     type: 'object',
     properties: properties(entityType.properties),
-    required: required
   };
+
+  if (required.length > 0) {
+    schema.required = required;
+  }
+
+  return schema;
 }
 
 function properties(properties: Array<EntityProperty>): {[name: string]: Property} {
