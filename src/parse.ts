@@ -29,7 +29,7 @@ function parseEntitySet(namespace: string, entitySet: any, entityType: any): Ent
 function parseEntityType(entityType: any): EntityType {
   const result: EntityType = {
     name: entityType['$']['Name'],
-    properties: entityType['Property'].map(parseProperty)
+    properties: entityType['Property'] ? entityType['Property'].map(parseProperty) : []
   };
 
   const keys = entityType['Key'];
