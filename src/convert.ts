@@ -51,6 +51,18 @@ function entitySetGet(entitySet: EntitySet): Operation {
         type: 'integer',
         required: false,
         in: 'query'
+      },
+      {
+        name: '$orderby',
+        type: 'string',
+        required: false,
+        in: 'query'
+      },
+      {
+        name: '$count',
+        type: 'boolean',
+        required: false,
+        in: 'query'
       }
     ],
     responses: {
