@@ -36,6 +36,21 @@ function parseEntityType(entityType: any): EntityType {
     result.key = parseKey(keys[0], result.properties)
   }
 
+  const navigationProperties = entityType['NavigationProperty'];
+
+  if (navigationProperties && navigationProperties.length > 0) {
+    navigationProperties.forEach(property => {
+      result.properties.push({
+        name: property['$']['Name'],
+        type: 'array',
+        required: false,
+        items: {
+          $ref: `#/definitions/${property['$']['Type'].split(/[()]/)[1]}`
+        }
+      })
+    })
+  }
+
   return result;
 }
 
