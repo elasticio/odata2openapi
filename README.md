@@ -17,7 +17,7 @@ Use the `odata2openapi` method to download a particular OData metadata and conve
 ```JavaScript
 const { odata2openapi } = require('odata2openapi');
 
-odata2openapi('http://services.odata.org/V3/Northwind/Northwind.svc/$metadata')
+odata2openapi('http://services.odata.org/V4/Northwind/Northwind.svc/$metadata')
   .then(swagger => console.log(JSON.stringify(swagger, null, 2)))
   .catch(error => console.error(error))
 ```
@@ -27,7 +27,7 @@ odata2openapi('http://services.odata.org/V3/Northwind/Northwind.svc/$metadata')
 ```TypeScript
 import { odata2openapi } from 'odata2openapi';
 
-odata2openapi('http://services.odata.org/V3/Northwind/Northwind.svc/$metadata')
+odata2openapi('http://services.odata.org/V4/Northwind/Northwind.svc/$metadata')
   .then(swagger => console.log(JSON.stringify(swagger, null, 2)))
   .catch(error => console.error(error))
 ```
@@ -45,7 +45,7 @@ const xml = '';
 
 const options = {
   host: 'services.odata.org',
-  path: '/V3/Northwind/Northwind.svc'
+  path: '/V4/Northwind/Northwind.svc'
 };
 
 parse(xml)
@@ -60,7 +60,7 @@ import { parse, convert, Options } from 'odata2openapi';
 
 const options: Options = {
   host: 'services.odata.org',
-  path: '/V3/Northwind/Northwind.svc'
+  path: '/V4/Northwind/Northwind.svc'
 };
 
 const xml = '';

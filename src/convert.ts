@@ -41,7 +41,7 @@ function entitySetGet(entitySet: EntitySet): Operation {
         in: 'query'
       },
       {
-        name: '$take',
+        name: '$top',
         type: 'integer',
         required: false,
         in: 'query'
