@@ -63,6 +63,12 @@ function entitySetGet(entitySet: EntitySet): Operation {
         type: 'boolean',
         required: false,
         in: 'query'
+      },
+      {
+        name: '$expand',
+        type: 'string',
+        required: false,
+        in: 'query'
       }
     ],
     responses: {
