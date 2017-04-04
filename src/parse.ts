@@ -40,14 +40,27 @@ function parseEntityType(entityType: any): EntityType {
 
   if (navigationProperties && navigationProperties.length > 0) {
     navigationProperties.forEach(property => {
-      result.properties.push({
-        name: property['$']['Name'],
-        type: 'array',
-        required: false,
-        items: {
-          $ref: `#/definitions/${property['$']['Type'].split(/[()]/)[1]}`
+      const type = property['$']['Type']
+
+      if (type) { // OData V4 only
+        const ref = `#/definitions/${type.split(/[()]/)[1]}`
+        const name = property['$']['Name']
+
+        if (type.startsWith('Collection(')) {
+          result.properties.push({
+            name: name,
+            type: 'array',
+            items: {
+              $ref: ref
+            }
+          })
+        } else {
+          result.properties.push({
+            name: name,
+            $ref: ref
+          })
         }
-      })
+      }
     })
   }
 
