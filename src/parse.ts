@@ -57,7 +57,7 @@ function parseEntityType(entityType: any): EntityType {
         } else {
           result.properties.push({
             name: name,
-            $ref: ref
+            $ref: `#/definitions/${type}`
           })
         }
       }
