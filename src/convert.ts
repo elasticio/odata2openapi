@@ -30,10 +30,8 @@ function verifyOperationIdUniqueness(operationId: string): string {
   return operationId;
 }
 
-function entitySetGet(entitySet: EntitySet): Operation {
-  return {
-    operationId: verifyOperationIdUniqueness(`get${entitySet.name}`),
-    parameters: [
+function entitySetGet(entitySet: EntitySet, oDataVersion? : string): Operation  {
+  const parameters = [
       {
         name: '$filter',
         type: 'string',
@@ -59,18 +57,25 @@ function entitySetGet(entitySet: EntitySet): Operation {
         in: 'query'
       },
       {
-        name: '$count',
-        type: 'boolean',
-        required: false,
-        in: 'query'
-      },
-      {
         name: '$expand',
         type: 'string',
         required: false,
         in: 'query'
       }
-    ],
+    ]
+
+  if(oDataVersion == '4.0'){
+    parameters.concat([{
+        name: '$count',
+        type: 'boolean',
+        required: false,
+        in: 'query'
+      }])
+  }
+
+  return {
+    operationId: verifyOperationIdUniqueness(`get${entitySet.name}`),
+    parameters: parameters,
     responses: {
       '200': {
         description: `List of ${entitySet.entityType.name}`,
@@ -113,9 +118,9 @@ function entitySetPost(entitySet: EntitySet): Operation {
   }
 }
 
-function entitySetOperations(entitySet: EntitySet): PathItem {
+function entitySetOperations(entitySet: EntitySet, oDataVersion?: string): PathItem {
   return {
-    get: entitySetGet(entitySet),
+    get: entitySetGet(entitySet, oDataVersion),
     post: entitySetPost(entitySet)
   };
 }
@@ -199,11 +204,11 @@ function entityTypePatch(entitySet: EntitySet): Operation {
   };
 }
 
-function paths(entitySets: Array<EntitySet>): Paths {
+function paths(entitySets: Array<EntitySet>, oDataVersion?: string): Paths {
   const paths: Paths = {};
 
   entitySets.forEach(entitySet => {
-    paths[`/${entitySet.name}`] = entitySetOperations(entitySet);
+    paths[`/${entitySet.name}`] = entitySetOperations(entitySet, oDataVersion);
 
     if (entitySet.entityType.key) {
       const keys = entitySet.entityType.key.map(property => {
@@ -344,7 +349,7 @@ function convert(entitySets: Array<EntitySet>, options: Options, oDataVersion?: 
       version: '0.0.1',
       ['x-odata-version']: oDataVersion
     },
-    paths: paths(options.include ? filter(entitySets, options.include) : entitySets),
+    paths: paths(options.include ? filter(entitySets, options.include) : entitySets, oDataVersion),
     definitions: definitions(entitySets)
   };
 }
