@@ -1,5 +1,7 @@
 import * as xml2js from 'xml2js';
 
+import { Service } from './Service';
+
 import { EntitySet } from './EntitySet';
 import { EntityType } from './EntityType';
 import { EntityProperty } from './EntityProperty';
@@ -81,12 +83,14 @@ function parseProperty(property: any) {
   };
 }
 
-function parse(xml: string): Promise<Array<EntitySet>> {
-  return new Promise<Array<EntitySet>>((resolve, reject) => {
+function parse(xml: string): Promise<Service> {
+  return new Promise<Service>((resolve, reject) => {
     xml2js.parseString(xml, (error, metadata) => {
       if (error) {
         return reject(error);
       }
+
+      const version = metadata['edmx:Edmx']['Version']
 
       const [dataServices] = metadata['edmx:Edmx']['edmx:DataServices']
 
@@ -110,7 +114,7 @@ function parse(xml: string): Promise<Array<EntitySet>> {
         }
       });
 
-      resolve(entitySets);
+      resolve({ schemas: entitySets, version: version });
     });
   });
 }

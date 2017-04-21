@@ -331,7 +331,7 @@ function filter(entitySets: Array<EntitySet>, wanted: Array<string>): Array<Enti
   return entitySets.filter(entitySet => wanted.includes(entitySet.name))
 }
 
-function convert(entitySets: Array<EntitySet>, options: Options): Swagger {
+function convert(entitySets: Array<EntitySet>, options: Options, oDataVersion?: string): Swagger {
   registeredOperations.clear();
 
   return {
@@ -341,7 +341,8 @@ function convert(entitySets: Array<EntitySet>, options: Options): Swagger {
     basePath: options.basePath || '/',
     info: {
       title: 'OData Service',
-      version: '0.0.1'
+      version: '0.0.1',
+      ['x-odata-version']: oDataVersion
     },
     paths: paths(options.include ? filter(entitySets, options.include) : entitySets),
     definitions: definitions(entitySets)
