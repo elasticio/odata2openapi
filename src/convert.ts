@@ -71,6 +71,13 @@ function entitySetGet(entitySet: EntitySet, oDataVersion? : string): Operation  
         required: false,
         in: 'query'
       }])
+  } else {
+     parameters.concat([{
+        name: '$inlinecount',
+        type: 'string',
+        required: false,
+        in: 'query'
+      }])
   }
 
   return {
