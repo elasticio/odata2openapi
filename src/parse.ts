@@ -114,7 +114,7 @@ function parse(xml: string): Promise<Service> {
         }
       });
 
-      resolve({ schemas: entitySets, version: version });
+      resolve({ entitySets: entitySets, version: version });
     });
   });
 }
