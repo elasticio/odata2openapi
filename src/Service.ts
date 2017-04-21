@@ -1,6 +1,6 @@
 import { EntitySet } from './EntitySet';
 
 export interface Service {
-  schemas: Array<EntitySet>;
+  entitySets: Array<EntitySet>;
   version: string;
 }

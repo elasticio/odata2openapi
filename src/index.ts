@@ -16,7 +16,7 @@ function odata2openapi(metadataUrl: string, options?: Options): Promise<Swagger>
     };
   }
 
-  return get(host, path).then(parse).then(entitySets => convert(entitySets, options))
+  return get(host, path).then(parse).then(service => convert(service.entitySets, options, service.version))
 }
 
 export {
