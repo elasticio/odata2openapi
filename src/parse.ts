@@ -90,7 +90,7 @@ function parse(xml: string): Promise<Service> {
         return reject(error);
       }
 
-      const version = metadata['edmx:Edmx']['Version']
+      const version = metadata['edmx:Edmx']['$']['Version']
 
       const [dataServices] = metadata['edmx:Edmx']['edmx:DataServices']
 
