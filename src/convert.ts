@@ -31,8 +31,9 @@ function verifyOperationIdUniqueness(operationId: string): string {
 }
 
 function entitySetGet(entitySet: EntitySet, oDataVersion? : string): Operation  {
-  const parameters = [
-      {
+  return {
+    operationId: verifyOperationIdUniqueness(`get${entitySet.name}`),
+    parameters: [{
         name: '$filter',
         type: 'string',
         required: false,
@@ -61,28 +62,13 @@ function entitySetGet(entitySet: EntitySet, oDataVersion? : string): Operation  
         type: 'string',
         required: false,
         in: 'query'
-      }
-    ]
-
-  if(oDataVersion == '4.0'){
-    parameters.concat([{
-        name: '$count',
-        type: 'boolean',
+      },
+      {
+        name: oDataVersion == '4.0' ? '$count' : '$inlinecount',
+        type: oDataVersion == '4.0' ? 'boolean' : 'string',
         required: false,
         in: 'query'
-      }])
-  } else {
-     parameters.concat([{
-        name: '$inlinecount',
-        type: 'string',
-        required: false,
-        in: 'query'
-      }])
-  }
-
-  return {
-    operationId: verifyOperationIdUniqueness(`get${entitySet.name}`),
-    parameters: parameters,
+      }],
     responses: {
       '200': {
         description: `List of ${entitySet.entityType.name}`,
