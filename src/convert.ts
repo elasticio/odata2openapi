@@ -103,8 +103,11 @@ function entitySetPost(entitySet: EntitySet): Operation {
       }
     ],
     responses: {
-      '204': {
-        description: 'Empty response.'
+      '201': {
+        description: "Created entity",
+        schema: {
+          $ref: `#/definitions/${entitySet.namespace}.${entitySet.entityType.name}`
+        }
       },
       default: defaultResponse
     }
