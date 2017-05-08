@@ -30,45 +30,45 @@ function verifyOperationIdUniqueness(operationId: string): string {
   return operationId;
 }
 
-function entitySetGet(entitySet: EntitySet, oDataVersion? : string): Operation  {
+function entitySetGet(entitySet: EntitySet, oDataVersion?: string): Operation {
   return {
     operationId: verifyOperationIdUniqueness(`get${entitySet.name}`),
     parameters: [{
-        name: '$filter',
-        type: 'string',
-        required: false,
-        in: 'query'
-      },
-      {
-        name: '$top',
-        type: 'integer',
-        required: false,
-        in: 'query'
-      },
-      {
-        name: '$skip',
-        type: 'integer',
-        required: false,
-        in: 'query'
-      },
-      {
-        name: '$orderby',
-        type: 'string',
-        required: false,
-        in: 'query'
-      },
-      {
-        name: '$expand',
-        type: 'string',
-        required: false,
-        in: 'query'
-      },
-      {
-        name: oDataVersion == '4.0' ? '$count' : '$inlinecount',
-        type: oDataVersion == '4.0' ? 'boolean' : 'string',
-        required: false,
-        in: 'query'
-      }],
+      name: '$filter',
+      type: 'string',
+      required: false,
+      in: 'query'
+    },
+    {
+      name: '$top',
+      type: 'integer',
+      required: false,
+      in: 'query'
+    },
+    {
+      name: '$skip',
+      type: 'integer',
+      required: false,
+      in: 'query'
+    },
+    {
+      name: '$orderby',
+      type: 'string',
+      required: false,
+      in: 'query'
+    },
+    {
+      name: '$expand',
+      type: 'string',
+      required: false,
+      in: 'query'
+    },
+    {
+      name: oDataVersion == '4.0' ? '$count' : '$inlinecount',
+      type: oDataVersion == '4.0' ? 'boolean' : 'string',
+      required: false,
+      in: 'query'
+    }],
     responses: {
       '200': {
         description: `List of ${entitySet.entityType.name}`,
@@ -275,10 +275,10 @@ function schema(entityType: EntityType): Schema {
   return schema;
 }
 
-function properties(properties: Array<EntityProperty>): {[name: string]: Property} {
-  const result: {[name:string]: Property} = {};
+function properties(properties: Array<EntityProperty>): { [name: string]: Property } {
+  const result: { [name: string]: Property } = {};
 
-  properties.forEach(({name, type}) => {
+  properties.forEach(({ name, type }) => {
     result[name] = property(type);
   })
 
@@ -287,7 +287,7 @@ function properties(properties: Array<EntityProperty>): {[name: string]: Propert
 
 function property(type: string): Property {
   const property: Property = {
-    type: 'string'
+    type: type == 'array' ? 'array' : 'object'
   };
 
   switch (type) {
@@ -303,11 +303,16 @@ function property(type: string): Property {
     case 'Edm.Boolean':
       property.type = 'boolean';
       break;
+    case 'Edm.String':
+      property.type = 'string';
+      break;
     case 'Edm.Byte':
+      property.type = 'string';
       property.format = 'byte';
       break;
     case 'Edm.DateTime':
     case 'Edm.DateTimeOffset':
+      property.type = 'string';
       property.format = 'date-time';
       break;
     case 'Edm.Decimal':
