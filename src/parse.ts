@@ -57,10 +57,25 @@ function parseEntityType(entityType: any): EntityType {
             }
           })
         } else {
-          result.properties.push({
+          const prop = {
             name: name,
             $ref: `#/definitions/${type}`
-          })
+          }
+
+          const refConstraint = property['ReferentialConstraint'];
+          const constraints = refConstraint ? refConstraint.map(c => {
+              return {
+                  property: c['$']['Property'],
+                  refProperty: c['$']['ReferencedProperty']
+              }
+          }) : [];
+
+          prop['x-ref'] = {
+              partner: property['$']['Partner'],
+              constraints : constraints
+          }
+          
+          result.properties.push(prop);
         }
       }
     })
