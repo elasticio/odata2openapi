@@ -1,6 +1,8 @@
 import * as http from 'http';
+import * as https from 'https';
+import * as url from 'url';
 
-function get(host, path): Promise<string> {
+function get(protocol, host, path): Promise<string> {
   return new Promise((resolve, reject) => {
     const options = {
       host,
@@ -12,7 +14,8 @@ function get(host, path): Promise<string> {
       path
     };
 
-    const request = http.request(options, (response) => {
+    const fetcher = (protocol.startsWith('https:') ? https.request : http.request);
+    const request = fetcher(options, (response) => {
       let result = '';
 
       response.on('data', (chunk) => {
@@ -22,7 +25,8 @@ function get(host, path): Promise<string> {
       response.on('end', () => {
         const { statusCode, headers } = response
         if (statusCode >= 300 && statusCode < 400) {
-          get(host, headers['location']).then(resolve, reject);
+          const u = url.parse(headers['location']);
+          get(u.protocol, u.host, u.path).then(resolve, reject);
         } else if (statusCode >= 200 && statusCode < 300) {
           resolve(result);
         } else {
