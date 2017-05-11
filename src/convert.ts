@@ -310,6 +310,10 @@ function property(type: string): Property {
       property.type = 'string';
       property.format = 'byte';
       break;
+    case 'Edm.Binary':
+      property.type = 'string';
+      property.format = 'base64';
+      break;      
     case 'Edm.DateTime':
     case 'Edm.DateTimeOffset':
       property.type = 'string';
