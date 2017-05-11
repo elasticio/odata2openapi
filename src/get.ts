@@ -1,7 +1,7 @@
 import * as http from 'http';
 
 function get(host, path): Promise<string> {
-  return new Promise((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     const options = {
       host,
       method: 'GET',
