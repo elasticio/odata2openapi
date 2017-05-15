@@ -71,6 +71,7 @@ function parseEntityType(entityType: any): EntityType {
           }) : [];
 
           prop['x-ref'] = {
+              name: name,
               partner: property['$']['Partner'],
               constraints : constraints
           }
