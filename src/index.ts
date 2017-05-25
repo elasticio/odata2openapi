@@ -7,7 +7,7 @@ import parse from './parse';
 import convert from './convert';
 
 function odata2openapi(metadataUrl: string, options?: Options): Promise<Swagger> {
-  const { path, host } = url.parse(metadataUrl);
+  const { path, host, protocol } = url.parse(metadataUrl);
 
   if (!options) {
     options = {
@@ -16,7 +16,7 @@ function odata2openapi(metadataUrl: string, options?: Options): Promise<Swagger>
     };
   }
 
-  return get(host, path).then(parse).then(service => convert(service.entitySets, options, service.version))
+  return get(protocol, host, path).then(parse).then(service => convert(service.entitySets, options, service.version))
 }
 
 export {
