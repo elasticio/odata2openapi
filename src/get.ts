@@ -3,7 +3,7 @@ import * as https from 'https';
 import * as url from 'url';
 
 function get(protocol, host, path): Promise<string> {
-  return new Promise((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     const options = {
       host,
       method: 'GET',
