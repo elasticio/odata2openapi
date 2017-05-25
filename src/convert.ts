@@ -192,6 +192,12 @@ function entityTypePatch(entitySet: EntitySet): Operation {
     operationId: verifyOperationIdUniqueness(`update${entitySet.entityType.name}`),
     parameters,
     responses: {
+      '200': {
+        description: `A ${entitySet.entityType.name}.`,
+        schema: {
+          $ref: `#/definitions/${entitySet.namespace}.${entitySet.entityType.name}`
+        }
+      },
       '204': {
         description: `Empty response.`,
       },
