@@ -1,5 +1,4 @@
-/// <reference types="node" />
-import { RequestOptions } from 'http';
+import { RequestOptions } from './RequestOptions';
 import { Swagger } from './Swagger';
 import { Options } from './Options';
 import parse from './parse';
