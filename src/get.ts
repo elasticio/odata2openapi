@@ -1,18 +1,11 @@
 import * as http from 'http';
+import { RequestOptions } from 'http';
 import * as https from 'https';
 import * as url from 'url';
 
-function get(protocol, host, path): Promise<string> {
+function get(protocol, host, path, options?:any, requestOptions?:RequestOptions): Promise<string> {
   return new Promise<string>((resolve, reject) => {
-    const options = {
-      host,
-      method: 'GET',
-      headers: {
-        'Accept': '*/*',
-        'User-Agent': 'odata2openapi'
-      },
-      path
-    };
+
 
     const fetcher = (protocol.startsWith('https:') ? https.request : http.request);
     const request = fetcher(options, (response) => {

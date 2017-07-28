@@ -1,12 +1,13 @@
 import * as url from 'url';
-
+import { RequestOptions } from 'http';
 import { Swagger } from './Swagger';
 import { Options } from './Options';
 import get from './get';
 import parse from './parse';
 import convert from './convert';
 
-function odata2openapi(metadataUrl: string, options?: Options): Promise<Swagger> {
+function odata2openapi(metadataUrl: string, options?: Options, requestOptions?: RequestOptions,
+  headers?: { [key: string]: any }): Promise<Swagger> {
   const { path, host, protocol } = url.parse(metadataUrl);
 
   if (!options) {
@@ -15,8 +16,24 @@ function odata2openapi(metadataUrl: string, options?: Options): Promise<Swagger>
       host
     };
   }
+  if (!headers) {
+    headers = {
+      'Accept': '*/*',
+      'User-Agent': 'odata2openapi'
+    };
+  }
+  if (!requestOptions) {
+    let hostSplit = host.split(':');
+    requestOptions = {
+      hostname: hostSplit[0],
+      port: hostSplit.length > 1 ? Number(hostSplit[1]) : 80,
+      method: 'GET',
+      headers: headers,
+      path
+    };
+  }
 
-  return get(protocol, host, path).then(parse).then(service => convert(service.entitySets, options, service.version))
+  return get(protocol, host, path, options, requestOptions).then(parse).then(service => convert(service.entitySets, options, service.version))
 }
 
 export {
