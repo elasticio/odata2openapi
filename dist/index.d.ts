@@ -1,0 +1,30 @@
+/// <reference types="node" />
+import { RequestOptions } from 'http';
+import { Swagger } from './Swagger';
+import { Options } from './Options';
+import parse from './parse';
+import convert from './convert';
+declare function odata2openapi(metadataUrl: string, options?: Options, requestOptions?: RequestOptions, headers?: {
+    [key: string]: any;
+}): Promise<Swagger>;
+export { Options, odata2openapi, convert, parse };
+export * from './Swagger';
+export * from './Definitions';
+export * from './EntityProperty';
+export * from './EntityType';
+export * from './EntitySet';
+export * from './Operation';
+export * from './Operation';
+export * from './Paths';
+export * from './Property';
+export * from './Schema';
+export * from './PathItem';
+export * from './Operation';
+export * from './Definitions';
+export * from './Options';
+export * from './Parameter';
+export * from './Reference';
+export * from './Response';
+export * from './SecurityDefinition';
+export * from './SecurityDefinitions';
+export * from './SecurityRequirement';
