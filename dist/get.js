@@ -3,10 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var http = require("http");
 var https = require("https");
 var url = require("url");
-function get(protocol, host, path, options, requestOptions) {
+function get(protocol, host, path, requestOptions) {
     return new Promise(function (resolve, reject) {
         var fetcher = (protocol.startsWith('https:') ? https.request : http.request);
-        var request = fetcher(options, function (response) {
+        var request = fetcher(requestOptions, function (response) {
             var result = '';
             response.on('data', function (chunk) {
                 result += chunk;

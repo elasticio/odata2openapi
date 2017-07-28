@@ -33,7 +33,7 @@ function odata2openapi(metadataUrl: string, options?: Options, requestOptions?: 
     };
   }
 
-  return get(protocol, host, path, options, requestOptions).then(parse).then(service => convert(service.entitySets, options, service.version))
+  return get(protocol, host, path, requestOptions).then(parse).then(service => convert(service.entitySets, options, service.version))
 }
 
 export {

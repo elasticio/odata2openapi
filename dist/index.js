@@ -30,7 +30,7 @@ function odata2openapi(metadataUrl, options, requestOptions, headers) {
             path: path
         };
     }
-    return get_1.default(protocol, host, path, options, requestOptions).then(parse_1.default).then(function (service) { return convert_1.default(service.entitySets, options, service.version); });
+    return get_1.default(protocol, host, path, requestOptions).then(parse_1.default).then(function (service) { return convert_1.default(service.entitySets, options, service.version); });
 }
 exports.odata2openapi = odata2openapi;
 //# sourceMappingURL=index.js.map
