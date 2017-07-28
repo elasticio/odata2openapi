@@ -3,12 +3,12 @@ import * as https from 'https';
 import * as url from 'url';
 import { RequestOptions } from './RequestOptions';
 
-function get(protocol, host, path, options?:any, requestOptions?:RequestOptions): Promise<string> {
+function get(protocol, host, path,requestOptions?:RequestOptions): Promise<string> {
   return new Promise<string>((resolve, reject) => {
 
 
     const fetcher = (protocol.startsWith('https:') ? https.request : http.request);
-    const request = fetcher(options, (response) => {
+    const request = fetcher(requestOptions, (response) => {
       let result = '';
 
       response.on('data', (chunk) => {
