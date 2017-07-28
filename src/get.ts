@@ -1,7 +1,7 @@
 import * as http from 'http';
-import { RequestOptions } from 'http';
 import * as https from 'https';
 import * as url from 'url';
+import { RequestOptions } from './RequestOptions';
 
 function get(protocol, host, path, options?:any, requestOptions?:RequestOptions): Promise<string> {
   return new Promise<string>((resolve, reject) => {

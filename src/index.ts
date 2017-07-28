@@ -1,5 +1,5 @@
 import * as url from 'url';
-import { RequestOptions } from 'http';
+import { RequestOptions } from './RequestOptions';
 import { Swagger } from './Swagger';
 import { Options } from './Options';
 import get from './get';
