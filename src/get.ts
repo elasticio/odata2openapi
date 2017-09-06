@@ -2,7 +2,7 @@ import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
 
-function get(protocol, host, path): Promise<string> {
+function get(protocol, host, path, port): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     const options = {
       host,
@@ -11,7 +11,8 @@ function get(protocol, host, path): Promise<string> {
         'Accept': '*/*',
         'User-Agent': 'odata2openapi'
       },
-      path
+      path,
+      port
     };
 
     const fetcher = (protocol.startsWith('https:') ? https.request : http.request);
