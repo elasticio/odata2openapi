@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/akorchev/odata2openapi.git"
+    "url": "git+https://github.com/ajonp/odata2openapi"
   },
   "keywords": [
     "odata",
@@ -25,9 +25,9 @@
   "author": "Atanas Korchev",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/akorchev/odata2openapi/issues"
+    "url": "https://github.com/ajonp/odata2openapi"
   },
-  "homepage": "https://github.com/akorchev/odata2openapi#readme",
+  "homepage": "https://github.com/ajonp/odata2openapi",
   "devDependencies": {
     "@types/node": "^7.0.18",
     "typescript": "^2.3.2"
