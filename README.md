@@ -49,7 +49,7 @@ const options = {
 };
 
 parse(xml)
-  .then(entitySets => convert(entitySets, options))
+  .then(service => convert(service.entitySets, options, service.version))
   .then(swagger => console.log(JSON.stringify(swagger, null, 2)))
   .catch(error => console.error(error))
 ```
@@ -66,7 +66,7 @@ const options: Options = {
 const xml = '';
 
 parse(xml)
-  .then(entitySets => convert(entitySets, options))
+  .then(service => convert(service.entitySets, options, service.version))
   .then(swagger => console.log(JSON.stringify(swagger, null, 2)))
   .catch(error => console.error(error))
 ```
