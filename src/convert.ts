@@ -308,11 +308,17 @@ function entitySetOperations(entitySet: EntitySet, parentTypes: Array<EntityType
 }
 
 function entityTypeOperations(entitySet: EntitySet, parentTypes: Array<EntityType>, parentType?: EntityType, parentPath?: string): PathItem {
-  return {
+  const operations = {
     get: entityTypeGet(entitySet, parentTypes, parentType, parentPath),
     delete: entityTypeDelete(entitySet, parentTypes, parentType, parentPath),
-    patch: entityTypePatch(entitySet, parentTypes, parentType, parentPath)
+    patch: entityTypeUpdate('update', entitySet, parentTypes, parentType, parentPath)
   };
+
+  if (parentPath) {
+    operations['put'] = entityTypeUpdate('put', entitySet, parentTypes, parentType, parentPath)
+  }
+
+  return operations;
 }
 
 function entityTypeGet(entitySet: EntitySet, parentTypes: Array<EntityType>, parentType?: EntityType, parentPath?: string): Operation {
@@ -343,7 +349,7 @@ function entityTypeDelete(entitySet: EntitySet, parentTypes: Array<EntityType>, 
     }
   };
 }
-function entityTypePatch(entitySet: EntitySet, parentTypes: Array<EntityType>, parentType?: EntityType, parentPath?: string): Operation {
+function entityTypeUpdate(prefix: string, entitySet: EntitySet, parentTypes: Array<EntityType>, parentType?: EntityType, parentPath?: string): Operation {
   const parameters = keyParameters(entitySet, parentTypes, parentType);
 
   parameters.push({
@@ -356,7 +362,7 @@ function entityTypePatch(entitySet: EntitySet, parentTypes: Array<EntityType>, p
   });
 
   return {
-    operationId: verifyOperationIdUniqueness(`update${operationName(parentPath, entitySet.entityType.name)}`),
+    operationId: verifyOperationIdUniqueness(`${prefix}${operationName(parentPath, entitySet.entityType.name)}`),
     parameters,
     responses: {
       '200': {
@@ -461,6 +467,7 @@ function addContainmentPathsRecursive(paths: Paths, entitySet: EntitySet, option
     entitySet.entityType.paths.filter(p => entityTypePath.indexOf(`/${p.name}`) == -1 || entityTypePath.indexOf(`/${p.name}(`) == -1).forEach(p => {
 
       if (isCollection(p.type)) {
+        // Collection: GET, POST, etc.
         const typeName = typeNameFromCollectionType(p.type);
         const entityType = options.entityTypes.find(et => `${entitySet.namespace}.${et.name}` == typeName);
         if (entityType) {
@@ -483,16 +490,16 @@ function addContainmentPathsRecursive(paths: Paths, entitySet: EntitySet, option
           }
         }
       } else {
-
+        // Single entity: GET and PUT
         const entityType = options.entityTypes.find(et => `${entitySet.namespace}.${et.name}` == p.type);
         if (entityType) {
           const keyPath = `${entitySet.name}(${keyNames(entitySet, parentType).join(',')})`
           const entityTypePath = `${parentPath || ''}/${keyPath}/${p.name}`
           if (!paths[entityTypePath]) {
-            const oid = `get${upperFirst(nameFromParentPath(parentPath))}${upperFirst(entitySet.name)}${upperFirst(p.name)}`;
+            const oid = `${upperFirst(nameFromParentPath(parentPath))}${upperFirst(entitySet.name)}${upperFirst(p.name)}`;
             paths[entityTypePath] = {
               get: {
-                operationId: verifyOperationIdUniqueness(oid),
+                operationId: verifyOperationIdUniqueness(`get${oid}`),
                 parameters: keyParameters(entitySet, parentTypes, parentType),
                 responses: {
                   '200': {
@@ -500,6 +507,29 @@ function addContainmentPathsRecursive(paths: Paths, entitySet: EntitySet, option
                     schema: {
                       $ref: `#/definitions/${p.type}`
                     }
+                  },
+                  default: defaultResponse
+                }
+              },
+              put: {
+                operationId: verifyOperationIdUniqueness(`put${oid}`),
+                parameters: keyParameters(entitySet, parentTypes, parentType).concat([{
+                  name: p.name,
+                  in: 'body',
+                  required: true,
+                  schema: {
+                    $ref: `#/definitions/${p.type}`
+                  }
+                }]),
+                responses: {
+                  '200': {
+                    description: `A ${p.name}.`,
+                    schema: {
+                      $ref: `#/definitions/${p.type}`
+                    }
+                  },
+                  '204': {
+                    description: `Empty response.`,
                   },
                   default: defaultResponse
                 }
