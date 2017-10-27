@@ -616,19 +616,18 @@ function pathsRecursive({ entitySets, options, oDataVersion, paths, parentPath, 
 
       entitySet.entityType.properties.filter(p => p.type == 'Edm.Stream').forEach(p => {
 
-        const nameParameter = `${p.name}Name`;
+        const nameParameter = `fileName`;
 
         const parameters = keyParameters(entitySet, parentTypes, parentType).concat([{
           name: nameParameter,
           in: 'path',
           required: true,
-          type: 'string'
+          type: 'object'
         },{
-          name: p.name,
+          name: 'file',
           in: 'body',
           required: true,
-          type: 'string',
-          format: 'binary'
+          type: 'object'
         }]);
 
         const propertyPutPath = `${parentPath || ''}/${entitySet.name}('{${nameParameter}}')/${p.name}`;
@@ -636,7 +635,7 @@ function pathsRecursive({ entitySets, options, oDataVersion, paths, parentPath, 
         if (!paths[propertyPutPath]) {
           paths[propertyPutPath] = {
             put: {
-              operationId: verifyOperationIdUniqueness(`put${operationName(parentPath, entitySet.entityType.name)}${upperFirst(entitySet.name)}${upperFirst(p.name)}`),
+              operationId: verifyOperationIdUniqueness(`upload${operationName(parentPath, entitySet.entityType.name)}${upperFirst(entitySet.name)}${upperFirst(p.name)}`),
               parameters,
               responses: {
                 '200': {
