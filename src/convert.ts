@@ -614,6 +614,47 @@ function pathsRecursive({ entitySets, options, oDataVersion, paths, parentPath, 
 
       paths[entityTypePath] = entityTypeOperations(entitySet, parentTypes, parentType, parentType ? entityTypePath : null)
 
+      entitySet.entityType.properties.filter(p => p.type == 'Edm.Stream').forEach(p => {
+
+        const nameParameter = `${p.name}Name`;
+
+        const parameters = keyParameters(entitySet, parentTypes, parentType).concat([{
+          name: nameParameter,
+          in: 'path',
+          required: true,
+          type: 'string'
+        },{
+          name: p.name,
+          in: 'body',
+          required: true,
+          type: 'string',
+          format: 'binary'
+        }]);
+
+        const propertyPutPath = `${parentPath || ''}/${entitySet.name}('{${nameParameter}}')/${p.name}`;
+
+        if (!paths[propertyPutPath]) {
+          paths[propertyPutPath] = {
+            put: {
+              operationId: verifyOperationIdUniqueness(`put${operationName(parentPath, entitySet.entityType.name)}${upperFirst(entitySet.name)}${upperFirst(p.name)}`),
+              parameters,
+              responses: {
+                '200': {
+                  description: `A ${entitySet.entityType.name}.`,
+                  schema: {
+                    $ref: `#/definitions/${entitySet.namespace}.${entitySet.entityType.name}`
+                  }
+                },
+                '204': {
+                  description: `Empty response.`,
+                },
+                default: defaultResponse
+              }
+            }
+          }
+        }
+      })
+
       addContainmentPathsRecursive(paths, entitySet, options, entityTypePath, parentPath, parentTypes, parentType, oDataVersion)
     }
   });
