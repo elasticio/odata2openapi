@@ -8,39 +8,16 @@ Run `npm install --save odata2openapi`
 
 ## Usage
 
-### Converting metadata from URL
-
-Use the `odata2openapi` method to download a particular OData metadata and convert it.
-
-#### JavaScript
-
-```JavaScript
-const { odata2openapi } = require('odata2openapi');
-
-odata2openapi('http://services.odata.org/V4/Northwind/Northwind.svc/$metadata')
-  .then(swagger => console.log(JSON.stringify(swagger, null, 2)))
-  .catch(error => console.error(error))
-```
-
-#### TypeScript
-
-```TypeScript
-import { odata2openapi } from 'odata2openapi';
-
-odata2openapi('http://services.odata.org/V4/Northwind/Northwind.svc/$metadata')
-  .then(swagger => console.log(JSON.stringify(swagger, null, 2)))
-  .catch(error => console.error(error))
-```
-
 ### Converting existing XML string
 
 Use the `parse` and `convert` methods if you have the metadata as XML.
 
 #### JavaScript
 
-```JavaSript
+```js
 const { parse, convert } = require('odata2openapi');
 
+// Get the OData metadata as a string.
 const xml = '';
 
 const options = {
@@ -63,6 +40,7 @@ const options: Options = {
   path: '/V4/Northwind/Northwind.svc'
 };
 
+// Get the OData metadata as a string.
 const xml = '';
 
 parse(xml)
