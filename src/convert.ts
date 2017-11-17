@@ -275,9 +275,19 @@ function entitySetGet(entitySet: EntitySet, parentTypes: Array<EntityType>, pare
   };
 }
 
+function operationNameForType(entityTypeName: string, entitySetName: string, parentPath?: string, prefix?: string, suffix?: string) {
+  let operationId = `${prefix || ''}${operationName(parentPath, entityTypeName)}${suffix || ''}`;
+
+  if (registeredOperations.has(operationId)) {
+    operationId = `${prefix || ''}${operationName(parentPath, entitySetName + entityTypeName)}${suffix || ''}`;
+  }
+
+  return operationId;
+}
+
 function entitySetPost(entitySet: EntitySet, parentTypes: Array<EntityType>, parentPath?: string): Operation {
   return {
-    operationId: verifyOperationIdUniqueness(`create${operationName(parentPath, entitySet.entityType.name)}`),
+    operationId: verifyOperationIdUniqueness(`${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, 'create')}`),
     parameters: parentKeyParameters(parentTypes).concat([
       {
         name: entitySet.entityType.name,
@@ -323,7 +333,7 @@ function entityTypeOperations(entitySet: EntitySet, parentTypes: Array<EntityTyp
 
 function entityTypeGet(entitySet: EntitySet, parentTypes: Array<EntityType>, parentType?: EntityType, parentPath?: string): Operation {
   return {
-    operationId: verifyOperationIdUniqueness(`get${operationName(parentPath, entitySet.entityType.name)}ById`),
+    operationId: verifyOperationIdUniqueness(`${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, 'get', 'ById')}`),
     parameters: keyParameters(entitySet, parentTypes, parentType),
     responses: {
       '200': {
@@ -339,7 +349,7 @@ function entityTypeGet(entitySet: EntitySet, parentTypes: Array<EntityType>, par
 
 function entityTypeDelete(entitySet: EntitySet, parentTypes: Array<EntityType>, parentType?: EntityType, parentPath?: string): Operation {
   return {
-    operationId: verifyOperationIdUniqueness(`delete${operationName(parentPath, entitySet.entityType.name)}`),
+    operationId: verifyOperationIdUniqueness(`${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, 'delete')}`),
     parameters: keyParameters(entitySet, parentTypes, parentType),
     responses: {
       '204': {
@@ -362,7 +372,7 @@ function entityTypeUpdate(prefix: string, entitySet: EntitySet, parentTypes: Arr
   });
 
   return {
-    operationId: verifyOperationIdUniqueness(`${prefix}${operationName(parentPath, entitySet.entityType.name)}`),
+    operationId: verifyOperationIdUniqueness(`${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, prefix)}`),
     parameters,
     responses: {
       '200': {
@@ -623,7 +633,7 @@ function pathsRecursive({ entitySets, options, oDataVersion, paths, parentPath, 
           in: 'path',
           required: true,
           type: 'object'
-        },{
+        }, {
           name: 'file',
           in: 'body',
           required: true,
