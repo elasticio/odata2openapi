@@ -824,7 +824,7 @@ function definitions(entitySets: Array<EntitySet>, complexTypes?: Array<ComplexT
   entitySets.forEach(entitySet => {
     const type = `${entitySet.namespace}.${entitySet.entityType.name}`;
 
-    definitions[type] = schema(entitySet.entityType);
+    definitions[definitions[type] ? `${entitySet.namespace}.${entitySet.name}` : type] = schema(entitySet.entityType);
 
   });
 
