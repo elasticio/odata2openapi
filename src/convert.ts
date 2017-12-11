@@ -893,8 +893,22 @@ function singletonProperties(properties: Array<EntityProperty>) {
 function properties(properties: Array<EntityProperty>): { [name: string]: Property } {
   const result: { [name: string]: Property } = {};
 
-  properties.forEach(({ name, type }) => {
+  properties.forEach((p) => {
+    const { name, type, items, $ref } = p;
+
     result[name] = property(type);
+
+    if(items) {
+      result[name].items = items;
+    }
+
+    if($ref) {
+      result[name]["$ref"] = $ref;
+    }
+
+    if(p["x-ref"]) {
+      result[name]["x-ref"] = p["x-ref"];
+    }
   })
 
   return result;
