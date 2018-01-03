@@ -58,7 +58,7 @@ function parseEntityPaths(namespace: string, entityType: any, entityTypes: Array
   if (entityType['NavigationProperty']) {
     entityType['NavigationProperty'].forEach(p => {
       if (p['$']['ContainsTarget']) {
-        paths.push({ 
+        paths.push({
           name: p['$']['Name'],
           type: p['$']['Type'],
         })
@@ -103,7 +103,8 @@ function parseEntityType(entityType: any, entityTypes: Array<any>, namespace?: s
     name: entityType['$']['Name'],
     abstract: entityType['$']['Abstract'],
     properties: entityBaseProperties.concat((entityType['Property'] || []).map(parseProperty)),
-    paths: parseEntityPaths(namespace, entityType, entityTypes)
+    paths: parseEntityPaths(namespace, entityType, entityTypes),
+    namespace
   };
 
   const baseTypeWithKey = entityBaseTypes.find(t => t['Key']);
@@ -216,11 +217,14 @@ function parseActionAndFunctionParameters(parameters: any): Array<ActionAndFunct
   }) : [];
 }
 
-function parseComplexType(complexTypes: Array<any>): Array<ComplexType> {
+function parseComplexTypes(complexTypes: Array<any>, schemas: Array<any>): Array<ComplexType> {
   return complexTypes && complexTypes.length ? complexTypes.map(t => {
+    const schema = schemas.find(s => s['ComplexType'].find(ct => ct == t))
+
     return {
       name: t['$']['Name'],
-      properties: (t['Property'] || []).map(parseProperty)
+      properties: (t['Property'] || []).map(parseProperty),
+      namespace: schema ? schema['$']['Namespace'] : null
     }
   }) : [];
 }
@@ -236,24 +240,35 @@ function parseAnnotations(annotations: Array<any>): Array<Annotation> {
 
 function parseSingletons(singletons: Array<any>, entitySets: Array<EntitySet>): Array<Singleton> {
   return singletons && singletons.length ? singletons.map(s => {
+    const properties = [];
+
+    (s['NavigationPropertyBinding'] || []).forEach(n => {
+      const entitySet = entitySets.find(es => es.name == n['$']['Target']);
+      if (entitySet) {
+        const path = n['$']['Path'];
+        if (path) {
+          properties.push({
+            name: path.split('/').pop(),
+            type: path.indexOf('/') != -1 ? `${entitySet.namespace}.${entitySet.entityType.name}` :
+              `Collection(${entitySet.namespace}.${entitySet.entityType.name})`
+          });
+        }
+      }
+    });
+
     return {
       name: s['$']['Name'],
       type: s['$']['Type'],
-      properties: (s['NavigationPropertyBinding'] || []).map(n => {
-        const entitySet = entitySets.find(es => es.name == n['$']['Target']);
-        return {
-          name: n['$']['Path'].split('/').pop(),
-          type: n['$']['Path'].indexOf('/') != -1 ? `${entitySet.namespace}.${entitySet.entityType.name}` :
-            `Collection(${entitySet.namespace}.${entitySet.entityType.name})`
-        };
-      })
+      properties
     }
   }) : [];
 }
 
-function parseEntityTypes(entityTypes: Array<any>) : Array<EntityType> {
+function parseEntityTypes(entityTypes: Array<any>, schemas: Array<any>): Array<EntityType> {
   return entityTypes.map(et => {
-    return parseEntityType(et, entityTypes)
+    const schema = schemas.find(s => s['EntityType'].find(t => t == et))
+
+    return parseEntityType(et, entityTypes, schema ? schema['$']['Namespace'] : null)
   });
 }
 
@@ -278,13 +293,15 @@ function parse(xml: string): Promise<Service> {
 
       const [entityContainer] = entityContainerSchema['EntityContainer']
 
-      const complexTypes = parseComplexType(entityContainerSchema['ComplexType']);
+      const defaultNamespace = entityContainerSchema['$']['Namespace'];
+
       const actions = parseActions(entityContainerSchema['Action']);
       const functions = parseFunctions(entityContainerSchema['Function']);
       const annotations = parseAnnotations(entityContainerSchema['Annotations']);
 
       const entitySets: Array<EntitySet> = [];
       const allEntityTypes: Array<any> = [];
+      const allComplexTypes: Array<any> = [];
 
       schemas.forEach(schema => {
         if (schema['EntityType']) {
@@ -293,13 +310,18 @@ function parse(xml: string): Promise<Service> {
           allEntityTypes.push(...schemaEntityTypes);
           entitySets.push(...parseEntitySets(namespace, entityContainer, schemaEntityTypes, annotations));
         }
+
+        if (schema['ComplexType']) {
+          const schemaComplexTypes = schema['ComplexType'];
+          allComplexTypes.push(...schemaComplexTypes);
+        }
       });
+
+      const complexTypes = parseComplexTypes(entityContainerSchema['ComplexType'], schemas);
 
       const singletons = parseSingletons(entityContainer['Singleton'], entitySets);
 
-      const defaultNamespace = entityContainerSchema['$']['Namespace'];
-
-      const entityTypes = parseEntityTypes(allEntityTypes)
+      const entityTypes = parseEntityTypes(allEntityTypes, schemas)
 
       resolve({ entitySets: entitySets, version: version, complexTypes, singletons, actions, functions, defaultNamespace, entityTypes });
     });

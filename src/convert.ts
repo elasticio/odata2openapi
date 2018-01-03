@@ -26,7 +26,7 @@ function operationName(parentPath: string, name: string) {
 }
 
 function typeNameFromCollectionType(type: string): string {
-  return type.split(/[()]/)[1];
+  return isCollection(type) ? type.split(/[()]/)[1] : type;
 }
 
 function typeNameFromType(type: string): string {
@@ -801,7 +801,7 @@ function actionOrFunctionParameters(action: Action | Function, isFunction: boole
     });
 }
 
-function definitions(entitySets: Array<EntitySet>, complexTypes?: Array<ComplexType>, singletons?: Array<any>): Definitions {
+function definitions(entitySets: Array<EntitySet>, complexTypes?: Array<ComplexType>, singletons?: Array<any>, entityTypes?: Array<EntityType>): Definitions {
   const definitions: Definitions = {
     'Error': {
       type: 'object',
@@ -821,16 +821,21 @@ function definitions(entitySets: Array<EntitySet>, complexTypes?: Array<ComplexT
     }
   };
 
-  entitySets.forEach(entitySet => {
+  entitySets.filter(es => es).forEach(entitySet => {
     const type = `${entitySet.namespace}.${entitySet.entityType.name}`;
 
     definitions[definitions[type] ? `${entitySet.namespace}.${entitySet.name}` : type] = schema(entitySet.entityType);
-
   });
 
   if (complexTypes) {
-    complexTypes.forEach(complexType => {
-      definitions[complexType.name] = schema(complexType);
+    complexTypes.filter(t => t).forEach(complexType => {
+      definitions[`${complexType.namespace}.${complexType.name}`] = schema(complexType);
+    });
+  }
+
+  if (entityTypes) {
+    entityTypes.filter(t => t).forEach(entityType => {
+      definitions[`${entityType.namespace}.${entityType.name}`] = schema(entityType);
     });
   }
 
@@ -1029,7 +1034,7 @@ function convert(allEntitySets: Array<EntitySet>, options: Options, oDataVersion
       ['x-odata-version']: oDataVersion
     },
     paths,
-    definitions: definitions(entitySets, options.complexTypes, options.singletons)
+    definitions: definitions(entitySets, options.complexTypes, options.singletons, options.entityTypes)
   };
 }
 

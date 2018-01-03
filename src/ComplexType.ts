@@ -5,4 +5,5 @@ export interface ComplexType {
   properties: Array<EntityProperty>;
   openType?: boolean;
   unicode?: boolean;
+  namespace?: string;
 }
