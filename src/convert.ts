@@ -473,84 +473,117 @@ function addContainmentActionsAndFunctionsBoundToCollectionToPaths(paths: Paths,
 }
 
 function addContainmentPathsRecursive(paths: Paths, entitySet: EntitySet, options: Options, entityTypePath: string, parentPath: string, parentTypes: Array<EntityType>, parentType: EntityType, oDataVersion?: string) {
+  
   if (entitySet.entityType.paths) {
-    entitySet.entityType.paths.filter(p => entityTypePath.indexOf(`/${p.name}`) == -1 || entityTypePath.indexOf(`/${p.name}(`) == -1).forEach(p => {
+    entitySet.entityType.paths
+      .filter(
+        p =>
+          entityTypePath.indexOf(`/${p.name}`) == -1 ||
+          entityTypePath.indexOf(`/${p.name}(`) == -1
+      )
+      .forEach(p => {        
+        if (options.entityTypes) { // Ensure entityTypes is defined (fixes #18)
+          if (isCollection(p.type)) {
+            // Collection: GET, POST, etc.
+            const typeName = typeNameFromCollectionType(p.type);
 
-      if (isCollection(p.type)) {
-        // Collection: GET, POST, etc.
-        const typeName = typeNameFromCollectionType(p.type);
-        const entityType = options.entityTypes.find(et => `${entitySet.namespace}.${et.name}` == typeName);
-        if (entityType) {
-          addContainmentActionsAndFunctionsBoundToCollectionToPaths(paths, p, entitySet, options, entityTypePath, parentTypes)
+            const entityType = options.entityTypes.find(
+              et => `${entitySet.namespace}.${et.name}` == typeName
+            );
+            if (entityType) {
+              addContainmentActionsAndFunctionsBoundToCollectionToPaths(
+                paths,
+                p,
+                entitySet,
+                options,
+                entityTypePath,
+                parentTypes
+              );
 
-          if (!paths[`${entityTypePath}/${p.name}`]) {
-            pathsRecursive({
-              entitySets: [{
-                name: p.name,
-                entityType: entityType,
-                namespace: entitySet.namespace
-              }],
-              options,
-              oDataVersion,
-              paths,
-              parentPath: entityTypePath,
-              parentTypes: parentTypes ? parentTypes.concat([entitySet.entityType]) : [entitySet.entityType],
-              parentType: entitySet.entityType
-            });
-          }
-        }
-      } else {
-        // Single entity: GET and PUT
-        const entityType = options.entityTypes.find(et => `${entitySet.namespace}.${et.name}` == p.type);
-        if (entityType) {
-          const keyPath = `${entitySet.name}(${keyNames(entitySet, parentType).join(',')})`
-          const entityTypePath = `${parentPath || ''}/${keyPath}/${p.name}`
-          if (!paths[entityTypePath]) {
-            const oid = `${upperFirst(nameFromParentPath(parentPath))}${upperFirst(entitySet.name)}${upperFirst(p.name)}`;
-            paths[entityTypePath] = {
-              get: {
-                operationId: verifyOperationIdUniqueness(`get${oid}`),
-                parameters: keyParameters(entitySet, parentTypes, parentType),
-                responses: {
-                  '200': {
-                    description: `A ${p.name}.`,
-                    schema: {
-                      $ref: `#/definitions/${p.type}`
+              if (!paths[`${entityTypePath}/${p.name}`]) {
+                pathsRecursive({
+                  entitySets: [
+                    {
+                      name: p.name,
+                      entityType: entityType,
+                      namespace: entitySet.namespace
+                    }
+                  ],
+                  options,
+                  oDataVersion,
+                  paths,
+                  parentPath: entityTypePath,
+                  parentTypes: parentTypes
+                    ? parentTypes.concat([entitySet.entityType])
+                    : [entitySet.entityType],
+                  parentType: entitySet.entityType
+                });
+              }
+            }
+          } else {
+            // Single entity: GET and PUT
+            const entityType = options.entityTypes.find(
+              et => `${entitySet.namespace}.${et.name}` == p.type
+            );
+            if (entityType) {
+              const keyPath = `${entitySet.name}(${keyNames(
+                entitySet,
+                parentType
+              ).join(",")})`;
+              const entityTypePath = `${parentPath || ""}/${keyPath}/${
+                p.name
+              }`;
+              if (!paths[entityTypePath]) {
+                const oid = `${upperFirst(
+                  nameFromParentPath(parentPath)
+                )}${upperFirst(entitySet.name)}${upperFirst(p.name)}`;
+                paths[entityTypePath] = {
+                  get: {
+                    operationId: verifyOperationIdUniqueness(`get${oid}`),
+                    parameters: keyParameters(
+                      entitySet,
+                      parentTypes,
+                      parentType
+                    ),
+                    responses: {
+                      "200": {
+                        description: `A ${p.name}.`,
+                        schema: { $ref: `#/definitions/${p.type}` }
+                      },
+                      default: defaultResponse
                     }
                   },
-                  default: defaultResponse
-                }
-              },
-              put: {
-                operationId: verifyOperationIdUniqueness(`put${oid}`),
-                parameters: keyParameters(entitySet, parentTypes, parentType).concat([{
-                  name: p.name,
-                  in: 'body',
-                  required: true,
-                  schema: {
-                    $ref: `#/definitions/${p.type}`
+                  put: {
+                    operationId: verifyOperationIdUniqueness(`put${oid}`),
+                    parameters: keyParameters(
+                      entitySet,
+                      parentTypes,
+                      parentType
+                    ).concat([
+                      {
+                        name: p.name,
+                        in: "body",
+                        required: true,
+                        schema: {
+                          $ref: `#/definitions/${p.type}`
+                        }
+                      }
+                    ]),
+                    responses: {
+                      "200": {
+                        description: `A ${p.name}.`,
+                        schema: { $ref: `#/definitions/${p.type}` }
+                      },
+                      "204": { description: `Empty response.` },
+                      default: defaultResponse
+                    }
                   }
-                }]),
-                responses: {
-                  '200': {
-                    description: `A ${p.name}.`,
-                    schema: {
-                      $ref: `#/definitions/${p.type}`
-                    }
-                  },
-                  '204': {
-                    description: `Empty response.`,
-                  },
-                  default: defaultResponse
-                }
+                };
               }
             }
           }
         }
-
-      }
-
-    });
+      });
   }
 }
 
