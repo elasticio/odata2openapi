@@ -18,10 +18,10 @@ function odata2openapi(metadataUrl: string, options?: Options): Promise<Swagger>
     .then(parse)
     .then(function(service) {
       
-      /* This fixes an edge case with certain metadata sets such
+      /* This fixes #18, an edge case with endpoints such
        * as Microsoft Graph where there are entityTypes but convert
-       * was erroring out because these entityTypes were not passed
-       * in with options */
+       * errors out because these entityTypes are not passed
+       * in with the options package */
       if(service.entityTypes.length > 0 || !options.entityTypes){
         options.entityTypes = service.entityTypes;
       }
