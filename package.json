@@ -8,8 +8,8 @@
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",
   "scripts": {
-    "build": "rm -rf dist && mkdir dist && tsc --declaration --outDir dist --rootDir src",
-    "build:example": "rm -rf dist && mkdir dist && tsc --declaration --outDir dist --project example.tsconfig.json",
+    "build": "rm -rf dist && mkdir dist && tsc --declaration --rootDir src",
+    "build:example": "rm -rf dist && mkdir dist && tsc --declaration --project example.tsconfig.json",
     "start": "npm run build:example && node dist/example/index.js",
     "prepublish": "npm run build"
   },
