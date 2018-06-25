@@ -167,12 +167,31 @@ function parseKey(key: any, properties: Array<EntityProperty>): Array<EntityProp
   return properties.filter(property => refs.includes(property.name));
 }
 
-function parseProperty(property: any) {
-  return {
-    required: property['$']['Nullable'] == 'false',
-    name: property['$']['Name'],
-    type: property['$']['Type']
+function parseProperty(property: any) : EntityProperty {
+  const result: EntityProperty = {
+      required: property['$']['Nullable'] == 'false',
+      name: property['$']['Name']
   };
+
+  const type = property['$']['Type'];
+
+  if(type.startsWith('Collection(')) {
+    const objectType = type.match(/^Collection\((.*)\)$/)[1];
+    result.type = 'array';
+    if(objectType.startsWith('Edm.')) {
+      result.items = {
+        type: objectType
+      }
+    } else {
+        result.items = {
+            $ref: `#/definitions/${objectType}`
+        };
+    }
+  } else {
+    result.type = type;
+  }
+
+  return result;
 }
 
 function parseActions(actions: Array<any>): Array<Action> {
