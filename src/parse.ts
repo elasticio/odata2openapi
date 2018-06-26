@@ -12,6 +12,7 @@ import { ActionAndFunctionParameter } from './ActionAndFunctionParameter';
 import { ComplexType } from './ComplexType';
 import { Annotation } from './Annotation';
 import { Singleton } from './Singleton';
+import {EnumType} from './EnumType';
 
 function typeNameFromType(type: string): string {
   return type ? type.split('.').pop() : null;
@@ -248,6 +249,18 @@ function parseComplexTypes(complexTypes: Array<any>, schemas: Array<any>): Array
   }) : [];
 }
 
+function parseEnumTypes(enumTypes: Array<any>, schemas: Array<any>): Array<EnumType> {
+    return enumTypes && enumTypes.length ? enumTypes.map(t => {
+        const schema = schemas.find(s => s['EnumType'].find(ct => ct == t))
+
+        return {
+            name: t['$']['Name'],
+            memberNames: (t['Member'] || []).map(m => m['$']['Name']),
+            namespace: schema ? schema['$']['Namespace'] : null
+        }
+    }) : [];
+}
+
 function parseAnnotations(annotations: Array<any>): Array<Annotation> {
   return annotations && annotations.length ? annotations.map(t => {
     return {
@@ -321,6 +334,7 @@ function parse(xml: string): Promise<Service> {
       const entitySets: Array<EntitySet> = [];
       const allEntityTypes: Array<any> = [];
       const allComplexTypes: Array<any> = [];
+      const allEnumTypes: Array<EnumType> = [];
 
       schemas.forEach(schema => {
         if (schema['EntityType']) {
@@ -334,15 +348,22 @@ function parse(xml: string): Promise<Service> {
           const schemaComplexTypes = schema['ComplexType'];
           allComplexTypes.push(...schemaComplexTypes);
         }
+
+        if (schema['EnumType']) {
+            const schemaEnumTypes = schema['EnumType'];
+            allEnumTypes.push(...schemaEnumTypes);
+        }
       });
 
       const complexTypes = parseComplexTypes(entityContainerSchema['ComplexType'], schemas);
 
       const singletons = parseSingletons(entityContainer['Singleton'], entitySets);
 
-      const entityTypes = parseEntityTypes(allEntityTypes, schemas)
+      const entityTypes = parseEntityTypes(allEntityTypes, schemas);
 
-      resolve({ entitySets: entitySets, version: version, complexTypes, singletons, actions, functions, defaultNamespace, entityTypes });
+      const enumTypes = parseEnumTypes(allEnumTypes, schemas);
+
+      resolve({ entitySets: entitySets, version: version, complexTypes, singletons, actions, functions, defaultNamespace, entityTypes, enumTypes });
     });
   });
 }

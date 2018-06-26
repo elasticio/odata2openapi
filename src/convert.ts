@@ -15,6 +15,7 @@ import { Function } from './Function';
 import { Response } from './Response';
 import { ComplexType } from './ComplexType';
 import { ActionAndFunctionParameter } from './ActionAndFunctionParameter';
+import {EnumType} from "./EnumType";
 
 
 function nameFromParentPath(parentPath: string): string {
@@ -801,7 +802,7 @@ function actionOrFunctionParameters(action: Action | Function, isFunction: boole
     });
 }
 
-function definitions(entitySets: Array<EntitySet>, complexTypes?: Array<ComplexType>, singletons?: Array<any>, entityTypes?: Array<EntityType>): Definitions {
+function definitions(entitySets: Array<EntitySet>, complexTypes?: Array<ComplexType>, singletons?: Array<any>, entityTypes?: Array<EntityType>, enumTypes?: Array<EnumType>): Definitions {
   const definitions: Definitions = {
     'Error': {
       type: 'object',
@@ -821,21 +822,26 @@ function definitions(entitySets: Array<EntitySet>, complexTypes?: Array<ComplexT
     }
   };
 
+  const enumTypesDic = enumTypes ? enumTypes.reduce((dicSoFar, currentEnumType) => {
+      dicSoFar[`${currentEnumType.namespace}.${currentEnumType.name}`] = currentEnumType.memberNames;
+      return dicSoFar;
+  }, {}) : {};
+
   entitySets.filter(es => es).forEach(entitySet => {
     const type = `${entitySet.namespace}.${entitySet.entityType.name}`;
 
-    definitions[definitions[type] ? `${entitySet.namespace}.${entitySet.name}` : type] = schema(entitySet.entityType);
+    definitions[definitions[type] ? `${entitySet.namespace}.${entitySet.name}` : type] = schema(entitySet.entityType, enumTypesDic);
   });
 
   if (complexTypes) {
     complexTypes.filter(t => t).forEach(complexType => {
-      definitions[`${complexType.namespace}.${complexType.name}`] = schema(complexType);
+      definitions[`${complexType.namespace}.${complexType.name}`] = schema(complexType, enumTypesDic);
     });
   }
 
   if (entityTypes) {
     entityTypes.filter(t => t).forEach(entityType => {
-      definitions[`${entityType.namespace}.${entityType.name}`] = schema(entityType);
+      definitions[`${entityType.namespace}.${entityType.name}`] = schema(entityType, enumTypesDic);
     });
   }
 
@@ -848,7 +854,7 @@ function definitions(entitySets: Array<EntitySet>, complexTypes?: Array<ComplexT
   return definitions;
 }
 
-function schema(entityType: EntityType): Schema {
+function schema(entityType: EntityType, enumTypesDictionary: {[key: string]: Array<any>}): Schema {
   const required = entityType.properties ? entityType.properties.filter(property => property.required).map(property => property.name) : [];
 
   const schema: Schema = {
@@ -856,7 +862,7 @@ function schema(entityType: EntityType): Schema {
   };
 
   if (entityType.properties) {
-    schema.properties = properties(entityType.properties);
+    schema.properties = properties(entityType.properties, enumTypesDictionary);
   }
 
   if (required.length > 0) {
@@ -895,13 +901,13 @@ function singletonProperties(properties: Array<EntityProperty>) {
   return result;
 }
 
-function properties(properties: Array<EntityProperty>): { [name: string]: Property } {
+function properties(properties: Array<EntityProperty>, enumTypesDictionary: {[key: string]: Array<any>}): { [name: string]: Property } {
   const result: { [name: string]: Property } = {};
 
   properties.forEach((p) => {
     const { name, type, items, $ref } = p;
 
-    result[name] = property(type);
+    result[name] = property(type, enumTypesDictionary);
 
     if(items) {
       result[name].items = items;
@@ -956,10 +962,15 @@ function edmTypeToSwaggerType(type: string): { isPrimitive: boolean, name: strin
     };
 }
 
-function property(type: string): Property {
+function property(type: string, enumTypesDictionary?: {[key: string]: Array<any>}): Property {
   const property: Property = {
     type: type == 'array' ? 'array' : 'object'
   };
+
+  if(enumTypesDictionary && enumTypesDictionary[type]) {
+      property.type = 'string';
+      property.enum = enumTypesDictionary[type];
+  }
 
   switch (type) {
     case 'Edm.Int16':
@@ -1034,7 +1045,7 @@ function convert(allEntitySets: Array<EntitySet>, options: Options, oDataVersion
       ['x-odata-version']: oDataVersion
     },
     paths,
-    definitions: definitions(entitySets, options.complexTypes, options.singletons, options.entityTypes)
+    definitions: definitions(entitySets, options.complexTypes, options.singletons, options.entityTypes, options.enumTypes)
   };
 }
 

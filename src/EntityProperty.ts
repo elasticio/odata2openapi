@@ -4,4 +4,5 @@ export interface EntityProperty {
   required?: boolean;
   items?: any;
   $ref?: any;
+  enum?: Array<any>;
 }
