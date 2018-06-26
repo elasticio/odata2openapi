@@ -910,11 +910,18 @@ function properties(properties: Array<EntityProperty>, enumTypesDictionary: {[ke
     result[name] = property(type, enumTypesDictionary);
 
     if(items) {
-      const itemsAsProperty = property(items.type, enumTypesDictionary);
-      if(itemsAsProperty.type === 'object' || itemsAsProperty.type === 'array') {
-          result[name].items = items
+      if (items.$ref) {
+        const schemaToDeReference = items.$ref.replace('#/definitions/', '');
+        if(enumTypesDictionary[schemaToDeReference]) {
+          result[name].items = property(schemaToDeReference, enumTypesDictionary);
+        }
       } else {
-          result[name].items = itemsAsProperty;
+          const itemsAsProperty = property(items.type, enumTypesDictionary);
+          if (itemsAsProperty.type === 'object' || itemsAsProperty.type === 'array') {
+              result[name].items = items
+          } else {
+              result[name].items = itemsAsProperty;
+          }
       }
     }
 
