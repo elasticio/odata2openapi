@@ -910,7 +910,12 @@ function properties(properties: Array<EntityProperty>, enumTypesDictionary: {[ke
     result[name] = property(type, enumTypesDictionary);
 
     if(items) {
-      result[name].items = items;
+      const itemsAsProperty = property(items.type, enumTypesDictionary);
+      if(itemsAsProperty.type === 'object' || itemsAsProperty.type === 'array') {
+          result[name].items = items
+      } else {
+          result[name].items = itemsAsProperty;
+      }
     }
 
     if($ref) {
