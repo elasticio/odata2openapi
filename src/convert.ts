@@ -915,7 +915,9 @@ function properties(properties: Array<EntityProperty>, enumTypesDictionary: {[ke
         if(enumTypesDictionary[schemaToDeReference]) {
           result[name].items = property(schemaToDeReference, enumTypesDictionary);
         }
-      } else {
+      }
+
+      if (!result[name].items) {
           const itemsAsProperty = property(items.type, enumTypesDictionary);
           if (itemsAsProperty.type === 'object' || itemsAsProperty.type === 'array') {
               result[name].items = items
