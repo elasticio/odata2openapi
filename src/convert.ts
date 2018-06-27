@@ -1034,7 +1034,7 @@ function property(type: string, enumTypesDictionary?: {[key: string]: Array<any>
       break;
   }
 
-  if (property.type === 'object' && type !== 'object' && !type.startsWith('Edm.')) {
+  if (property.type === 'object' && type && type !== 'object' && !type.startsWith('Edm.')) {
     property['$ref'] = `#/definitions/${type}`;
   }
 
