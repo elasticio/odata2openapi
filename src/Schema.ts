@@ -4,6 +4,6 @@ import { Reference } from './Reference';
 export interface Schema {
   type: string;
   required?: Array<string>;
-  items?: Schema | Reference;
+  items?: Schema | Reference | Property;
   properties?: {[propertyName: string]: Property};
 }

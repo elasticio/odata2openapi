@@ -3,6 +3,7 @@ import { ComplexType } from './ComplexType';
 import { EntityType } from './EntityType';
 import { Action } from './Action';
 import { Function } from './Function';
+import { EnumType } from "./EnumType";
 
 export interface Service {
   entitySets: Array<EntitySet>;
@@ -12,5 +13,6 @@ export interface Service {
   singletons: Array<any>;
   actions: Array<Action>;
   functions:  Array<Function>;
+  enumTypes: Array<EnumType>;
   defaultNamespace: string;
 }
