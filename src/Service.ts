@@ -3,7 +3,7 @@ import { ComplexType } from './ComplexType';
 import { EntityType } from './EntityType';
 import { Action } from './Action';
 import { Function } from './Function';
-import {EnumType} from "./EnumType";
+import { EnumType } from "./EnumType";
 
 export interface Service {
   entitySets: Array<EntitySet>;
