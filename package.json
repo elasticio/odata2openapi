@@ -1,5 +1,5 @@
 {
-  "name": "odata2openapi",
+  "name": "@elasticiodev/odata2openapi",
   "version": "1.2.4",
   "description": "Convert OData metadata document to OpenAPI (fka Swagger) format",
   "files": [
@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/akorchev/odata2openapi.git"
+    "url": "https://github.com/elasticio/odata2openapi.git"
   },
   "keywords": [
     "odata",

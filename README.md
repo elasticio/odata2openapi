@@ -4,7 +4,7 @@ This node module converts an existing OData metadata to OpeanAPI format.
 
 ## Install
 
-Run `npm install --save odata2openapi`
+Run `npm install --save @elasticiodev/odata2openapi`
 
 ## Usage
 
@@ -15,7 +15,7 @@ Use the `parse` and `convert` methods if you have the metadata as XML.
 #### JavaScript
 
 ```js
-const { parse, convert } = require('odata2openapi');
+const { parse, convert } = require('@elasticiodev/odata2openapi');
 
 // Get the OData metadata as a string.
 const xml = '';
@@ -33,7 +33,7 @@ parse(xml)
 
 #### TypeScript
 ```TypeScript
-import { parse, convert, Options } from 'odata2openapi';
+import { parse, convert, Options } from '@elasticiodev/odata2openapi';
 
 const options: Options = {
   host: 'services.odata.org',
