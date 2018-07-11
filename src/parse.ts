@@ -5,6 +5,7 @@ import { Service } from './Service';
 import { EntitySet } from './EntitySet';
 import { EntityType } from './EntityType';
 import { EntityProperty } from './EntityProperty';
+import { KeyProperty } from './KeyProperty';
 import { Action } from './Action';
 import { Function } from './Function';
 import { ReturnType } from './ReturnType';
@@ -162,10 +163,29 @@ function parseEntityType(entityType: any, entityTypes: Array<any>, namespace?: s
   return result;
 }
 
-function parseKey(key: any, properties: Array<EntityProperty>): Array<EntityProperty> {
+function wrapKeyInQuotes(property: EntityProperty): boolean {
+    switch (property.type) {
+        case 'Edm.Int16':
+        case 'Edm.Int32':
+        case 'Edm.Int64':
+        case 'Edm.Double':
+        case 'Edm.Single':
+        case 'Edm.Decimal':
+            return false;
+    }
+
+    return true;
+}
+
+function parseKey(key: any, properties: Array<EntityProperty>): Array<KeyProperty> {
   const refs = key['PropertyRef'].map(propertyRef => propertyRef['$']['Name'])
 
-  return properties.filter(property => refs.includes(property.name));
+  return properties.filter(property => refs.includes(property.name))
+      .map(property => {
+        const keyProperty = <KeyProperty> property;
+        keyProperty.wrapKeyInQuotes = wrapKeyInQuotes(keyProperty);
+        return keyProperty;
+      });
 }
 
 function parseProperty(property: any) : EntityProperty {
