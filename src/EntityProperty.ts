@@ -5,4 +5,5 @@ export interface EntityProperty {
   items?: any;
   $ref?: any;
   enum?: Array<any>;
+  wrapValueInQuotesInUrls: boolean;
 }

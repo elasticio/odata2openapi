@@ -5,7 +5,6 @@ import { Service } from './Service';
 import { EntitySet } from './EntitySet';
 import { EntityType } from './EntityType';
 import { EntityProperty } from './EntityProperty';
-import { KeyProperty } from './KeyProperty';
 import { Action } from './Action';
 import { Function } from './Function';
 import { ReturnType } from './ReturnType';
@@ -132,12 +131,14 @@ function parseEntityType(entityType: any, entityTypes: Array<any>, namespace?: s
             type: 'array',
             items: {
               $ref: ref
-            }
+            },
+            wrapValueInQuotesInUrls: true
           })
         } else {
           const prop = {
             name: name,
-            $ref: `#/definitions/${type}`
+            $ref: `#/definitions/${type}`,
+            wrapValueInQuotesInUrls: true
           }
 
           const refConstraint = property['ReferentialConstraint'];
@@ -163,38 +164,24 @@ function parseEntityType(entityType: any, entityTypes: Array<any>, namespace?: s
   return result;
 }
 
-function wrapKeyInQuotes(property: EntityProperty): boolean {
-    switch (property.type) {
-        case 'Edm.Int16':
-        case 'Edm.Int32':
-        case 'Edm.Int64':
-        case 'Edm.Double':
-        case 'Edm.Single':
-        case 'Edm.Decimal':
-            return false;
-    }
-
-    return true;
-}
-
-function parseKey(key: any, properties: Array<EntityProperty>): Array<KeyProperty> {
+function parseKey(key: any, properties: Array<EntityProperty>): Array<EntityProperty> {
   const refs = key['PropertyRef'].map(propertyRef => propertyRef['$']['Name'])
 
-  return properties.filter(property => refs.includes(property.name))
-      .map(property => {
-        const keyProperty = <KeyProperty> property;
-        keyProperty.wrapKeyInQuotes = wrapKeyInQuotes(keyProperty);
-        return keyProperty;
-      });
+  return properties.filter(property => refs.includes(property.name));
 }
 
 function parseProperty(property: any) : EntityProperty {
+  const type = property['$']['Type'];
+
+  const dontWrapValueInQuotesInUrlsTypes = ['Edm.Int16', 'Edm.Int32', 'Edm.Int64','Edm.Double','Edm.Single','Edm.Decimal'];
+
+  const wrapValueInQuotesInUrls = !dontWrapValueInQuotesInUrlsTypes.includes(type);
+
   const result: EntityProperty = {
       required: property['$']['Nullable'] == 'false',
-      name: property['$']['Name']
+      name: property['$']['Name'],
+      wrapValueInQuotesInUrls
   };
-
-  const type = property['$']['Type'];
 
   if(type.startsWith('Collection(')) {
     const objectType = type.match(/^Collection\((.*)\)$/)[1];

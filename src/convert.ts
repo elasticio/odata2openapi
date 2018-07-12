@@ -184,7 +184,7 @@ function keyParameters(entitySet: EntitySet, parentTypes: Array<EntityType>, par
 function keyNames(entitySet: EntitySet, parentType?: EntityType): Array<string> {
   if (entitySet.entityType.key) {
     return entitySet.entityType.key.map(property => {
-      if(!property.wrapKeyInQuotes) {
+      if(!property.wrapValueInQuotesInUrls) {
           return parentType ? `{${lowerFirst(entitySet.entityType.name)}${upperFirst(property.name)}}` : `{${property.name}}`
       }
 

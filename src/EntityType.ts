@@ -1,8 +1,8 @@
 import { ComplexType } from './ComplexType';
-import { KeyProperty } from './KeyProperty';
+import { EntityProperty } from './EntityProperty';
 
 export interface EntityType extends ComplexType {
-  key?: Array<KeyProperty>;
+  key?: Array<EntityProperty>;
   abstract?: boolean;
   paths?: Array<{name: string, type: string}>;
 }
