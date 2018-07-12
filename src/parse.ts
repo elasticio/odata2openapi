@@ -173,7 +173,7 @@ function parseKey(key: any, properties: Array<EntityProperty>): Array<EntityProp
 function parseProperty(property: any) : EntityProperty {
   const type = property['$']['Type'];
 
-  const dontWrapValueInQuotesInUrlsTypes = ['Edm.Int16', 'Edm.Int32', 'Edm.Int64','Edm.Double','Edm.Single','Edm.Decimal'];
+  const dontWrapValueInQuotesInUrlsTypes = ['Edm.Int16', 'Edm.Int32', 'Edm.Int64','Edm.Double','Edm.Single','Edm.Decimal', 'Edm.Guid'];
 
   const wrapValueInQuotesInUrls = !dontWrapValueInQuotesInUrlsTypes.includes(type);
 
