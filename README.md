@@ -1,6 +1,6 @@
 # OData to OpenAPI converter
 
-This node module converts an existing OData metadata to OpeanAPI format.
+This node module converts an existing OData metadata to OpenAPI format.
 
 ## Install
 
