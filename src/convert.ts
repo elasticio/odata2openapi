@@ -184,13 +184,7 @@ function keyParameters(entitySet: EntitySet, parentTypes: Array<EntityType>, par
 function keyNames(entitySet: EntitySet, parentType?: EntityType): Array<string> {
   if (entitySet.entityType.key) {
     return entitySet.entityType.key.map(property => {
-      switch (property.type) {
-        case 'Edm.Int16':
-        case 'Edm.Int32':
-        case 'Edm.Int64':
-        case 'Edm.Double':
-        case 'Edm.Single':
-        case 'Edm.Decimal':
+      if(!property.wrapValueInQuotesInUrls) {
           return parentType ? `{${lowerFirst(entitySet.entityType.name)}${upperFirst(property.name)}}` : `{${property.name}}`
       }
 

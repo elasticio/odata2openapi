@@ -131,12 +131,14 @@ function parseEntityType(entityType: any, entityTypes: Array<any>, namespace?: s
             type: 'array',
             items: {
               $ref: ref
-            }
+            },
+            wrapValueInQuotesInUrls: true
           })
         } else {
           const prop = {
             name: name,
-            $ref: `#/definitions/${type}`
+            $ref: `#/definitions/${type}`,
+            wrapValueInQuotesInUrls: true
           }
 
           const refConstraint = property['ReferentialConstraint'];
@@ -169,12 +171,17 @@ function parseKey(key: any, properties: Array<EntityProperty>): Array<EntityProp
 }
 
 function parseProperty(property: any) : EntityProperty {
+  const type = property['$']['Type'];
+
+  const dontWrapValueInQuotesInUrlsTypes = ['Edm.Int16', 'Edm.Int32', 'Edm.Int64','Edm.Double','Edm.Single','Edm.Decimal', 'Edm.Guid'];
+
+  const wrapValueInQuotesInUrls = !dontWrapValueInQuotesInUrlsTypes.includes(type);
+
   const result: EntityProperty = {
       required: property['$']['Nullable'] == 'false',
-      name: property['$']['Name']
+      name: property['$']['Name'],
+      wrapValueInQuotesInUrls
   };
-
-  const type = property['$']['Type'];
 
   if(type.startsWith('Collection(')) {
     const objectType = type.match(/^Collection\((.*)\)$/)[1];
