@@ -5,6 +5,7 @@ export interface Property {
   type: string;
   enum?: Array<any>;
   format?: string;
+  description?: string;    
   minimum?: number;
   maximum?: number;
   default?: any;

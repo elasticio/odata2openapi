@@ -3,16 +3,21 @@ import * as xml2js from 'xml2js';
 import { Service } from './Service';
 
 import { EntitySet } from './EntitySet';
+import { SAPEntitySet } from './SAPData/SAPEntitySet';
 import { EntityType } from './EntityType';
 import { EntityProperty } from './EntityProperty';
 import { Action } from './Action';
 import { Function } from './Function';
+import { FunctionImport } from './FunctionImport';
+import { SAPFunction } from './SAPData/SAPFunction';
 import { ReturnType } from './ReturnType';
 import { ActionAndFunctionParameter } from './ActionAndFunctionParameter';
+import { Parameter } from './Parameter';
 import { ComplexType } from './ComplexType';
 import { Annotation } from './Annotation';
 import { Singleton } from './Singleton';
 import {EnumType} from './EnumType';
+import {edmTypeToSwaggerType} from './convert'
 
 function typeNameFromType(type: string): string {
   return type ? type.split('.').pop() : null;
@@ -33,23 +38,61 @@ function getEntityBaseTypes(entityType, entityTypes) {
 }
 
 function parseEntitySets(namespace: string, entityContainer: any, entityTypes: any, annotations?: Array<Annotation>): Array<EntitySet> {
+  const functionImports = parseFunctionImports(entityContainer['FunctionImport']);
+  
   return entityContainer['EntitySet'].map(entitySet => {
     const type = typeNameFromType(entitySet['$']['EntityType']);
 
     const entityType = entityTypes.find(entity => entity['$']['Name'] == type);
 
+    const entitySetFunctionImports = functionImports.filter(funcImport => funcImport['entitySet'] == entitySet['$']['Name'] );
+
     if (entityType) {
-      return parseEntitySet(namespace, entitySet, entityType, entityTypes, annotations);
+      return parseEntitySet(namespace, entitySet, entityType, entityTypes, annotations,entitySetFunctionImports);
     }
   }).filter(entitySet => !!entitySet);
 }
 
-function parseEntitySet(namespace: string, entitySet: any, entityType: any, entityTypes: Array<any>, annotations?: Array<Annotation>): EntitySet {
+function parseEntitySet(namespace: string, entitySet: any, entityType: any, entityTypes: Array<any>, annotations?: Array<Annotation>, functionImports?: Array<FunctionImport>): EntitySet {
   return {
     namespace,
     name: entitySet['$']['Name'],
     entityType: parseEntityType(entityType, entityTypes, namespace),
-    annotations: parseEntityTypeAnnotations(namespace, entityType, entityTypes, annotations)
+    annotations: parseEntityTypeAnnotations(namespace, entityType, entityTypes, annotations),
+    functionImports: functionImports
+  }
+}
+
+function parseSAPEntitySets(namespace: string, entityContainer: any, entityTypes: any, annotations?: Array<Annotation>, associations?:any): Array<EntitySet> {
+  const functionImports = parseFunctionImports(entityContainer['FunctionImport']);
+  
+  return entityContainer['EntitySet'].map(entitySet => {
+    const type = typeNameFromType(entitySet['$']['EntityType']);
+
+    const entityType = entityTypes.find(entity => entity['$']['Name'] == type);
+
+    const entitySetFunctionImports = functionImports.filter(funcImport => funcImport['entitySet'] == entitySet['$']['Name'] );
+
+    if (entityType) {
+      return parseSAPEntitySet(namespace, entitySet, entityType, entityTypes, annotations,associations,entitySetFunctionImports);
+    }
+  }).filter(entitySet => !!entitySet);
+}
+
+function parseSAPEntitySet(namespace: string, entitySet: any, entityType: any, entityTypes: Array<any>, annotations?: Array<Annotation>,associations?:any,functionImports?: Array<FunctionImport>): SAPEntitySet {
+  //Set default value if not present, and convert to boolean via !!
+  return {
+    namespace,
+    name: entitySet['$']['Name'],
+    entityType: parseEntityType(entityType, entityTypes, namespace, associations),
+    annotations: parseEntityTypeAnnotations(namespace, entityType, entityTypes, annotations),
+    creatable: entitySet['$']['sap:creatable'] ==null?true:JSON.parse(entitySet['$']['sap:creatable'].toLowerCase()),
+    updatable: entitySet['$']['sap:updatable']==null?true:JSON.parse(entitySet['$']['sap:updatable'].toLowerCase()),
+    deleteable: entitySet['$']['sap:deletable']==null?true:JSON.parse(entitySet['$']['sap:deletable'].toLowerCase()),
+    pageable: entitySet['$']['sap:pageable']==null?true:JSON.parse(entitySet['$']['sap:pageable'].toLowerCase()),
+    searchable: entitySet['$']['sap:searchable']==null?false:JSON.parse(entitySet['$']['sap:searchable'].toLowerCase()),  
+    label: entitySet['$']['sap:label'],
+    functionImports: functionImports
   }
 }
 
@@ -96,7 +139,7 @@ function flatten(a) {
   return Array.isArray(a) ? [].concat(...a.map(flatten)) : a;
 }
 
-function parseEntityType(entityType: any, entityTypes: Array<any>, namespace?: string): EntityType {
+function parseEntityType(entityType: any, entityTypes: Array<any>, namespace?: string,associations?:any): EntityType {
   const entityBaseTypes = getEntityBaseTypes(entityType, entityTypes);
   const entityBaseProperties = flatten(entityBaseTypes.map(t => (t['Property'] || []).map(parseProperty)))
 
@@ -157,6 +200,38 @@ function parseEntityType(entityType: any, entityTypes: Array<any>, namespace?: s
 
           result.properties.push(prop);
         }
+      }else { //OData v2 NavigationProperty with Name, Relationship, ToRole, FromRole
+        const name = property['$']['Name'];
+        const relationship = property['$']['Relationship'];
+        const toRole = property['$']['ToRole'];
+        let type;
+        let multiplicity;
+        if(associations && name && relationship && toRole){
+          associations.forEach(association => {
+            association['End'].forEach(association => {
+              if(association['$']['Role']==toRole){
+                type = association['$']['Type'];
+                multiplicity = association['$']['Multiplicity'];
+              }
+            })
+          })
+
+          if (type && multiplicity && multiplicity=='1') {
+            result.properties.push({
+              name: name,
+              $ref: `#/definitions/${type}`,
+              wrapValueInQuotesInUrls: true
+            })
+          } else if (type && multiplicity && multiplicity=='*') 
+            result.properties.push({
+              name: name,
+              type: 'array',
+              items: {
+                $ref: `#/definitions/${type}`,
+              },
+              wrapValueInQuotesInUrls: true
+            })
+        }
       }
     })
   }
@@ -199,6 +274,10 @@ function parseProperty(property: any) : EntityProperty {
     result.type = type;
   }
 
+  if(property['$']['sap:label']){
+    result.description = property['$']['sap:label'];
+  }
+  
   return result;
 }
 
@@ -227,6 +306,34 @@ function parseFunctions(functions: Array<any>): Array<Function> {
   }) : [];
 }
 
+function parseFunctionImports(functionImports: Array<any>): Array<FunctionImport> {
+  return functionImports && functionImports.length ? functionImports.map(funcImport => {
+    return {
+      name: funcImport['$']['Name'],
+      label: funcImport['$']['sap:label'],
+      httpMethod: funcImport['$']['m:HttpMethod'],
+      entitySet: funcImport['$']['EntitySet'],
+      returnType: funcImport['$']['ReturnType'],
+      parameters: parseParameters(funcImport['Parameter']),
+    }
+  }) : [];
+}
+
+function parseSAPFunctions(functions: Array<any>): Array<SAPFunction> {
+  return functions && functions.length ? functions.map(func => {
+    return {
+      name: func['$']['Name'],
+      isBound: func['$']['IsBound'],
+      isComposable: func['$']['IsComposable'],
+      entitySetPath: func['$']['EntitySetPath'],
+      returnType: parseReturnTypes(func['ReturnType']),
+      parameters: parseActionAndFunctionParameters(func['Parameter']),
+      label: func['$']['sap-label'],
+      actionFor: func['$']['sap-action-for']
+    }
+  }) : [];
+}
+
 function parseReturnTypes(returnType: any): ReturnType {
   return returnType && returnType[0] ? {
     type: returnType[0]['$']['Type'],
@@ -243,6 +350,18 @@ function parseActionAndFunctionParameters(parameters: any): Array<ActionAndFunct
     }
   }) : [];
 }
+
+function parseParameters(parameters: any): Array<Parameter> {
+  return parameters && parameters.length ? parameters.map(parameter => {
+    return {
+      name: parameter['$']['Name'],
+      in: 'query',
+      type: edmTypeToSwaggerType(parameter['$']['Type']).name,
+      required:true
+    }
+  }) : [];
+}
+
 
 function parseComplexTypes(complexTypes: Array<any>, schemas: Array<any>): Array<ComplexType> {
   return complexTypes && complexTypes.length ? complexTypes.map(t => {
@@ -306,8 +425,7 @@ function parseSingletons(singletons: Array<any>, entitySets: Array<EntitySet>): 
 function parseEntityTypes(entityTypes: Array<any>, schemas: Array<any>): Array<EntityType> {
   return entityTypes.map(et => {
     const schema = schemas.find(s => s['EntityType'].find(t => t == et))
-
-    return parseEntityType(et, entityTypes, schema ? schema['$']['Namespace'] : null)
+    return parseEntityType(et, entityTypes, schema ? schema['$']['Namespace'] : null);
   });
 }
 
@@ -319,6 +437,12 @@ function parse(xml: string): Promise<Service> {
       }
 
       const version = metadata['edmx:Edmx']['$']['Version']
+      
+      //isSAPDataService=true if there exist xml namespace for http://www.sap.com/Protocols/SAPData
+      const xmlNamespaces= Object.keys(metadata['edmx:Edmx']['$']).filter(function(key){
+        return key.indexOf('xmlns')==0;
+      }).map (key => metadata['edmx:Edmx']['$'][key]);
+      let isSAPDataService = xmlNamespaces.some(xmlNamespace => xmlNamespace === 'http://www.sap.com/Protocols/SAPData');
 
       const [dataServices] = metadata['edmx:Edmx']['edmx:DataServices']
 
@@ -348,7 +472,12 @@ function parse(xml: string): Promise<Service> {
           const namespace = schema['$']['Namespace'];
           const schemaEntityTypes = schema['EntityType'];
           allEntityTypes.push(...schemaEntityTypes);
-          entitySets.push(...parseEntitySets(namespace, entityContainer, schemaEntityTypes, annotations));
+          if(isSAPDataService){
+            entitySets.push(...parseSAPEntitySets(namespace, entityContainer, schemaEntityTypes, annotations, schema['Association']));
+          }else {
+            entitySets.push(...parseEntitySets(namespace, entityContainer, schemaEntityTypes, annotations));
+          }
+          
         }
 
         if (schema['ComplexType']) {

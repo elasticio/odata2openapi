@@ -16,4 +16,6 @@ export interface Options {
   functions?:  Array<Function>;
   enumTypes?: Array<EnumType>;
   defaultNamespace?: string;
+  schemes?: Array<string>;
+  title?: string;
 }
