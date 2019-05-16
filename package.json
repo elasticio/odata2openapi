@@ -30,9 +30,10 @@
   "homepage": "https://github.com/elasticio/odata2openapi#readme",
   "devDependencies": {
     "@types/node": "^7.0.18",
+    "ts-node": "^8.1.0",
     "typescript": "^2.3.2"
   },
   "dependencies": {
-    "xml2js": "^0.4.17"
+    "xml-js": "1.6.11"
   }
 }

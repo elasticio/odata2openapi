@@ -1,4 +1,4 @@
-import * as xml2js from 'xml2js';
+import * as xml2js from 'xml-js';
 
 import { Service } from './Service';
 
@@ -313,18 +313,17 @@ function parseEntityTypes(entityTypes: Array<any>, schemas: Array<any>): Array<E
 
 function parse(xml: string): Promise<Service> {
   return new Promise<Service>((resolve, reject) => {
-    xml2js.parseString(xml, (error, metadata) => {
-      if (error) {
-        return reject(error);
-      }
 
-      const version = metadata['edmx:Edmx']['$']['Version']
+    const metadata = xml2js.xml2js(xml, { compact: true, trim: true, alwaysArray: true, attributesKey: '$' });
 
-      const [dataServices] = metadata['edmx:Edmx']['edmx:DataServices']
+    const version = metadata['edmx:Edmx'][0]['$'].Version;
 
-      const schemas = dataServices['Schema'];
+    const [dataServices] = metadata['edmx:Edmx'][0]['edmx:DataServices'];
 
-      const entityContainerSchema = schemas.find(schema => schema['EntityContainer'])
+    const schemas = dataServices['Schema'];
+
+
+    const entityContainerSchema = schemas.find(schema => schema['EntityContainer'])
 
       if (!entityContainerSchema) {
         reject(new Error('Cannot find EntityContainer element.'));
@@ -370,8 +369,7 @@ function parse(xml: string): Promise<Service> {
 
       const enumTypes = parseEnumTypes(allEnumTypes, schemas);
 
-      resolve({ entitySets: entitySets, version: version, complexTypes, singletons, actions, functions, defaultNamespace, entityTypes, enumTypes });
-    });
+      resolve({ entitySets: entitySets, version: version, complexTypes, singletons, actions, functions, defaultNamespace, entityTypes, enumTypes })
   });
 }
 
