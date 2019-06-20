@@ -950,6 +950,7 @@ function edmTypeToSwaggerType(type: string): { isPrimitive: boolean, name: strin
     case 'Edm.Binary':
     case 'Edm.DateTime':
     case 'Edm.DateTimeOffset':
+    case 'Edm.Date':
     case 'Edm.Guid':
     case 'Edm.Duration':
       swaggerType = 'string';
@@ -1012,6 +1013,10 @@ function property(type: string, enumTypesDictionary?: {[key: string]: Array<any>
     case 'Edm.DateTimeOffset':
       property.type = 'string';
       property.format = 'date-time';
+      break;
+    case 'Edm.Date':
+      property.type = 'string';
+      property.format = 'date';
       break;
     case 'Edm.Decimal':
     case 'Edm.Double':
