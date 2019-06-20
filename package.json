@@ -1,6 +1,6 @@
 {
   "name": "odata2openapi",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Convert OData metadata document to OpenAPI (fka Swagger) format",
   "files": [
     "dist"
@@ -29,9 +29,9 @@
   },
   "homepage": "https://github.com/elasticio/odata2openapi#readme",
   "devDependencies": {
-    "@types/node": "^7.0.18",
-    "ts-node": "^8.1.0",
-    "typescript": "^2.3.2"
+    "@types/node": "7.0.18",
+    "ts-node": "8.1.0",
+    "typescript": "2.3.2"
   },
   "dependencies": {
     "xml-js": "1.6.11"
