@@ -249,6 +249,7 @@ function entitySetParameters(typeAnnotations: Array<any>, parentTypes: Array<Ent
 function entitySetGet(entitySet: EntitySet, parentTypes: Array<EntityType>, parentPath?: string, oDataVersion?: string): Operation {
   return {
     operationId: verifyOperationIdUniqueness(`get${operationName(parentPath, entitySet.name)}`),
+    summary: `get${operationName(parentPath, entitySet.name)}`,
     parameters: entitySetParameters(entitySet.annotations, parentTypes, oDataVersion),
     responses: {
       '200': {
@@ -283,6 +284,7 @@ function operationNameForType(entityTypeName: string, entitySetName: string, par
 function entitySetPost(entitySet: EntitySet, parentTypes: Array<EntityType>, parentPath?: string): Operation {
   return {
     operationId: verifyOperationIdUniqueness(`${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, 'create')}`),
+    summary: `${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, 'create')}`,
     parameters: parentKeyParameters(parentTypes).concat([
       {
         name: entitySet.entityType.name,
@@ -329,6 +331,7 @@ function entityTypeOperations(entitySet: EntitySet, parentTypes: Array<EntityTyp
 function entityTypeGet(entitySet: EntitySet, parentTypes: Array<EntityType>, parentType?: EntityType, parentPath?: string): Operation {
   return {
     operationId: verifyOperationIdUniqueness(`${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, 'get', 'ById')}`),
+    summary: `${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, 'get', 'ById')}`,
     parameters: keyParameters(entitySet, parentTypes, parentType),
     responses: {
       '200': {
@@ -345,6 +348,7 @@ function entityTypeGet(entitySet: EntitySet, parentTypes: Array<EntityType>, par
 function entityTypeDelete(entitySet: EntitySet, parentTypes: Array<EntityType>, parentType?: EntityType, parentPath?: string): Operation {
   return {
     operationId: verifyOperationIdUniqueness(`${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, 'delete')}`),
+    summary: `${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, 'delete')}`,
     parameters: keyParameters(entitySet, parentTypes, parentType),
     responses: {
       '204': {
@@ -368,6 +372,7 @@ function entityTypeUpdate(prefix: string, entitySet: EntitySet, parentTypes: Arr
 
   return {
     operationId: verifyOperationIdUniqueness(`${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, prefix)}`),
+    summary: `${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, prefix)}`,
     parameters,
     responses: {
       '200': {
@@ -505,6 +510,7 @@ function addContainmentPathsRecursive(paths: Paths, entitySet: EntitySet, option
             paths[entityTypePath] = {
               get: {
                 operationId: verifyOperationIdUniqueness(`get${oid}`),
+                summary: `get${oid}`,
                 parameters: keyParameters(entitySet, parentTypes, parentType),
                 responses: {
                   '200': {
@@ -518,6 +524,7 @@ function addContainmentPathsRecursive(paths: Paths, entitySet: EntitySet, option
               },
               put: {
                 operationId: verifyOperationIdUniqueness(`put${oid}`),
+                summary: `put${oid}`,
                 parameters: keyParameters(entitySet, parentTypes, parentType).concat([{
                   name: p.name,
                   in: 'body',
@@ -556,6 +563,7 @@ function addSingletonsToPaths(paths: Paths, options: Options) {
       paths[singletonPath] = {
         get: {
           operationId: verifyOperationIdUniqueness(`get${upperFirst(singleton.name)}`),
+          summary: `get${upperFirst(singleton.name)}`,
           parameters: [],
           responses: {
             '200': {
@@ -586,6 +594,7 @@ function addSingletonsToPaths(paths: Paths, options: Options) {
                 paths[entityTypePath] = {
                   get: {
                     operationId: verifyOperationIdUniqueness(oid),
+                    summary: oid,
                     parameters: [],
                     responses: {
                       '200': {
@@ -641,6 +650,7 @@ function pathsRecursive({ entitySets, options, oDataVersion, paths, parentPath, 
           paths[propertyPutPath] = {
             put: {
               operationId: verifyOperationIdUniqueness(`upload${operationName(parentPath, entitySet.entityType.name)}${upperFirst(entitySet.name)}${upperFirst(p.name)}`),
+              summary: `upload${operationName(parentPath, entitySet.entityType.name)}${upperFirst(entitySet.name)}${upperFirst(p.name)}`,
               parameters,
               responses: {
                 '200': {
@@ -675,9 +685,11 @@ function setActionOrFunctionOperation(actionOrFunction, paths, path, verb, param
   if (!paths[path]) {
     const oid = actionOrFunctionName(actionOrFunction, registeredOperations, path, defaultNamespace);
     const operationId = verifyOperationIdUniqueness(oid);
+    const summary = operationId;
     paths[path] = {};
     paths[path][verb] = {
       operationId,
+      summary,
       parameters,
       responses
     };
