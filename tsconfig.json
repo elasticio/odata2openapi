@@ -12,6 +12,7 @@
   },
   "exclude": [
     "dist",
+    "test",
     "node_modules",
     "example"
   ]
