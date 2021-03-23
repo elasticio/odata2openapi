@@ -252,7 +252,7 @@ function entitySetParameters(typeAnnotations: Array<any>, parentTypes: Array<Ent
 function entitySetGet(entitySet: EntitySet, parentTypes: Array<EntityType>, parentPath?: string, oDataVersion?: string): Operation {
   let operation = {
     operationId: verifyOperationIdUniqueness(`get${operationName(parentPath, entitySet.name)}`),
-    summary: `List of ${entitySet.entityType.name}`,
+    summary: `get${operationName(parentPath, entitySet.name)}`,
     parameters: entitySetParameters(entitySet.annotations, parentTypes, oDataVersion),
     responses: {
       '200': {
@@ -325,7 +325,7 @@ function operationNameForType(entityTypeName: string, entitySetName: string, par
 function entitySetPost(entitySet: EntitySet, parentTypes: Array<EntityType>, parentPath?: string): Operation {
   return {
     operationId: verifyOperationIdUniqueness(`${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, 'create')}`),
-    summary: `Create a ${entitySet.entityType.name}.`,
+    summary: `${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, 'create')}`,
     parameters: parentKeyParameters(parentTypes).concat([
       {
         name: entitySet.entityType.name,
@@ -397,7 +397,7 @@ function entityTypeOperations(entitySet: EntitySet, parentTypes: Array<EntityTyp
 function entityTypeGet(entitySet: EntitySet, parentTypes: Array<EntityType>, parentType?: EntityType, parentPath?: string): Operation {
   return {
     operationId: verifyOperationIdUniqueness(`${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, 'get', 'ById')}`),
-    summary: `Lookup single ${entitySet.entityType.name}`,
+    summary: `${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, 'get', 'ById')}`,
     parameters: keyParameters(entitySet, parentTypes, parentType),
     responses: {
       '200': {
@@ -414,7 +414,7 @@ function entityTypeGet(entitySet: EntitySet, parentTypes: Array<EntityType>, par
 function entityTypeDelete(entitySet: EntitySet, parentTypes: Array<EntityType>, parentType?: EntityType, parentPath?: string): Operation {
   return {
     operationId: verifyOperationIdUniqueness(`${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, 'delete')}`),
-    summary: `Delete ${entitySet.entityType.name}.`,
+    summary: `${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, 'delete')}`,
     parameters: keyParameters(entitySet, parentTypes, parentType),
     responses: {
       '204': {
@@ -438,7 +438,7 @@ function entityTypeUpdate(prefix: string, entitySet: EntitySet, parentTypes: Arr
 
   return {
     operationId: verifyOperationIdUniqueness(`${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, prefix)}`),
-    summary: `Update ${entitySet.entityType.name}.`,
+    summary: `${operationNameForType(entitySet.entityType.name, entitySet.name, parentPath, prefix)}`,
     parameters,
     responses: {
       '200': {
@@ -632,7 +632,7 @@ function addContainmentPathsRecursive(paths: Paths, entitySet: EntitySet, option
             paths[entityTypePath] = {
               get: {
                 operationId: verifyOperationIdUniqueness(`get${oid}`),
-                summary: `Lookup ${p.name}.`,
+                summary: `get${oid}`,
                 parameters: keyParameters(entitySet, parentTypes, parentType),
                 responses: {
                   '200': {
@@ -646,7 +646,7 @@ function addContainmentPathsRecursive(paths: Paths, entitySet: EntitySet, option
               },
               put: {
                 operationId: verifyOperationIdUniqueness(`put${oid}`),
-                summary: `Create ${p.name}.`,
+                summary: `put${oid}`,
                 parameters: keyParameters(entitySet, parentTypes, parentType).concat([{
                   name: p.name,
                   in: 'body',
@@ -685,7 +685,7 @@ function addSingletonsToPaths(paths: Paths, options: Options) {
       paths[singletonPath] = {
         get: {
           operationId: verifyOperationIdUniqueness(`get${upperFirst(singleton.name)}`),
-          summary: `Lookup ${singleton.type}.`,
+          summary: `get${upperFirst(singleton.name)}`,
           parameters: [],
           responses: {
             '200': {
@@ -716,7 +716,7 @@ function addSingletonsToPaths(paths: Paths, options: Options) {
                 paths[entityTypePath] = {
                   get: {
                     operationId: verifyOperationIdUniqueness(oid),
-                    summary: `Lookup ${p.name}.`,
+                    summary: oid,
                     parameters: [],
                     responses: {
                       '200': {
@@ -776,7 +776,7 @@ function pathsRecursive({ entitySets, options, oDataVersion, paths, parentPath, 
           paths[propertyPutPath] = {
             put: {
               operationId: verifyOperationIdUniqueness(`upload${operationName(parentPath, entitySet.entityType.name)}${upperFirst(entitySet.name)}${upperFirst(p.name)}`),
-              summary: `Create ${entitySet.entityType.name}.`,
+              summary: `upload${operationName(parentPath, entitySet.entityType.name)}${upperFirst(entitySet.name)}${upperFirst(p.name)}`,
               parameters,
               responses: {
                 '200': {
@@ -811,9 +811,11 @@ function setActionOrFunctionOperation(actionOrFunction, paths, path, verb, param
   if (!paths[path]) {
     const oid = actionOrFunctionName(actionOrFunction, registeredOperations, path, defaultNamespace);
     const operationId = verifyOperationIdUniqueness(oid);
+    const summary = operationId;
     paths[path] = {};
     paths[path][verb] = {
       operationId,
+      summary,
       parameters,
       responses
     };
@@ -1090,6 +1092,7 @@ export function edmTypeToSwaggerType(type: string): { isPrimitive: boolean, name
     case 'Edm.Binary':
     case 'Edm.DateTime':
     case 'Edm.DateTimeOffset':
+    case 'Edm.Date':
     case 'Edm.Guid':
     case 'Edm.Duration':
       swaggerType = 'string';
@@ -1152,6 +1155,10 @@ function property(type: string, enumTypesDictionary?: {[key: string]: Array<any>
     case 'Edm.DateTimeOffset':
       property.type = 'string';
       property.format = 'date-time';
+      break;
+    case 'Edm.Date':
+      property.type = 'string';
+      property.format = 'date';
       break;
     case 'Edm.Decimal':
     case 'Edm.Double':
