@@ -48,3 +48,7 @@ parse(xml)
   .then(swagger => console.log(JSON.stringify(swagger, null, 2)))
   .catch(error => console.error(error))
 ```
+
+
+## Support
+Support for a limited subset of SAP Annotations for OData v2 http://www.sap.com/Protocols/SAPData .

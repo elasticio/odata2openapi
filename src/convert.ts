@@ -7,8 +7,11 @@ import { Operation } from './Operation';
 import { Definitions } from './Definitions';
 import { Options } from './Options';
 import { EntitySet } from './EntitySet';
+import { SAPEntitySet, instanceOfSAPEntitySet } from './SAPData/SAPEntitySet';
 import { EntityType } from './EntityType';
 import { EntityProperty } from './EntityProperty';
+import { SAPEntityProperty } from './SAPData/SAPEntityProperty';
+import { FunctionImport } from './FunctionImport';
 import { Parameter } from './Parameter';
 import { Action } from './Action';
 import { Function } from './Function';
@@ -247,7 +250,7 @@ function entitySetParameters(typeAnnotations: Array<any>, parentTypes: Array<Ent
 }
 
 function entitySetGet(entitySet: EntitySet, parentTypes: Array<EntityType>, parentPath?: string, oDataVersion?: string): Operation {
-  return {
+  let operation = {
     operationId: verifyOperationIdUniqueness(`get${operationName(parentPath, entitySet.name)}`),
     summary: `get${operationName(parentPath, entitySet.name)}`,
     parameters: entitySetParameters(entitySet.annotations, parentTypes, oDataVersion),
@@ -269,6 +272,44 @@ function entitySetGet(entitySet: EntitySet, parentTypes: Array<EntityType>, pare
       default: defaultResponse
     }
   };
+
+
+  if(instanceOfSAPEntitySet(entitySet)){
+      //OData v2 (SAP) uses d instead of value as the out response element
+    //Ref https://www.odata.org/documentation/odata-version-2-0/json-format/
+    operation['responses']['200']['schema']['properties']['d'] = operation['responses']['200']['schema']['properties']['value'];
+    delete operation['responses']['200']['schema']['properties']['value'];
+
+    let sapEntitySet = entitySet as SAPEntitySet;
+
+    operation['parameters']=operation['parameters'].filter(function(parameter){
+      if(sapEntitySet.pageable == false && (parameter.name=='$top' ||  parameter.name=='$skip' || parameter.name=='$inlinecount')){
+        return false;
+      }else if (parameter.name=='$expand'){
+        let exandableProperties = sapEntitySet.entityType.properties.filter(function(property){
+          if(property.type == "array" && property.items['$ref']){
+            return true;
+          }else if (property['$ref']){
+            return true;
+          }else {
+            return false;
+          }
+        })
+
+        if(exandableProperties.length>0){
+          var names = exandableProperties.map(property => property.name);
+          parameter['description'] ='Expandable properties: '+names.join(',');
+          parameter['default'] = names.join(',');
+          return true;
+        }else {
+          return false;
+        }
+      }
+
+      return true;
+    }); 
+  }
+  return operation;
 }
 
 function operationNameForType(entityTypeName: string, entitySetName: string, parentPath?: string, prefix?: string, suffix?: string) {
@@ -308,6 +349,16 @@ function entitySetPost(entitySet: EntitySet, parentTypes: Array<EntityType>, par
 }
 
 function entitySetOperations(entitySet: EntitySet, parentTypes: Array<EntityType>, parentPath?: string, oDataVersion?: string): PathItem {
+  if(instanceOfSAPEntitySet(entitySet)){
+    const sapEntitySet = entitySet as SAPEntitySet;
+    let entitySetOperations = {};
+    entitySetOperations['get'] = entitySetGet(entitySet, parentTypes, parentPath, oDataVersion);
+    if(sapEntitySet.creatable)
+      entitySetOperations['post'] = entitySetPost(entitySet, parentTypes, parentPath);
+
+    return entitySetOperations;
+  } 
+  //default handling
   return {
     get: entitySetGet(entitySet, parentTypes, parentPath, oDataVersion),
     post: entitySetPost(entitySet, parentTypes, parentPath)
@@ -315,6 +366,21 @@ function entitySetOperations(entitySet: EntitySet, parentTypes: Array<EntityType
 }
 
 function entityTypeOperations(entitySet: EntitySet, parentTypes: Array<EntityType>, parentType?: EntityType, parentPath?: string): PathItem {
+  if(instanceOfSAPEntitySet(entitySet)){
+    const sapEntitySet = entitySet as SAPEntitySet;
+    let entityTypeOperations = {};
+    entityTypeOperations['get'] = entityTypeGet(entitySet, parentTypes, parentType, parentPath);
+    if(sapEntitySet.deleteable)
+      entityTypeOperations['delete'] = entityTypeDelete(entitySet, parentTypes, parentType, parentPath);
+    if(sapEntitySet.updatable)
+      entityTypeOperations['patch'] = entityTypeUpdate('update', entitySet, parentTypes, parentType, parentPath)
+    if (parentPath) {
+      entityTypeOperations['put'] = entityTypeUpdate('put', entitySet, parentTypes, parentType, parentPath)
+    }
+
+    return entityTypeOperations;
+  }
+  //default handling
   const operations = {
     get: entityTypeGet(entitySet, parentTypes, parentType, parentPath),
     delete: entityTypeDelete(entitySet, parentTypes, parentType, parentPath),
@@ -387,6 +453,62 @@ function entityTypeUpdate(prefix: string, entitySet: EntitySet, parentTypes: Arr
       default: defaultResponse
     }
   };
+}
+
+function entityFunctionImportPath(entitySet: EntitySet, functionImport:FunctionImport): PathItem {
+  const pathItem = {};
+  let operation = {}
+  if(`${functionImport.returnType}`.startsWith("Collection(")){
+    const returnType =`${functionImport.returnType}`.slice(11,-1)
+
+    operation = {
+      operationId: functionImport.name,
+      summary: functionImport.label,
+      parameters: functionImport.parameters,
+      responses: {
+        '200': {
+          description: `${functionImport.returnType}`,
+          schema: {
+            type: 'object',
+            properties: {
+              value: {
+                type: 'array',
+                items: {
+                  $ref: `#/definitions/${returnType}`
+                }
+              }
+            }
+          }
+        },
+        default: defaultResponse
+      }
+    };
+    if(instanceOfSAPEntitySet(entitySet)){
+        //OData v2 (SAP) uses d instead of value as the out response element
+      //Ref https://www.odata.org/documentation/odata-version-2-0/json-format/
+      operation['responses']['200']['schema']['properties']['d'] = operation['responses']['200']['schema']['properties']['value'];
+      delete operation['responses']['200']['schema']['properties']['value'];
+    }
+  }else {
+    operation ={
+      operationId: functionImport.name,
+      summary: functionImport.label,
+      parameters: functionImport.parameters,
+      responses: {
+        '200': {
+          description: `${functionImport.returnType}`,
+          schema: {
+            $ref: `#/definitions/${functionImport.returnType}`
+          }
+        },
+        default: defaultResponse
+      }
+    };
+  }
+
+  pathItem[functionImport.httpMethod.toLowerCase()] = operation;
+
+  return pathItem
 }
 
 function addActionsAndFunctionsToPaths(paths: Paths, entitySets: Array<EntitySet>, options: Options) {
@@ -621,6 +743,10 @@ function pathsRecursive({ entitySets, options, oDataVersion, paths, parentPath, 
 
     const entitySetPath = `${parentPath || ''}/${entitySet.name}`;
     paths[entitySetPath] = entitySetOperations(entitySet, parentTypes, parentType ? entitySetPath : null, oDataVersion);
+
+    entitySet.functionImports.forEach(functionImport => {
+      paths[`/${functionImport.name}`]  =  entityFunctionImportPath (entitySet,functionImport);
+    });
 
     if (entitySet.entityType.key) {
       const keyPath = `${entitySet.name}(${keyNames(entitySet, parentType).join(',')})`
@@ -940,12 +1066,16 @@ function properties(properties: Array<EntityProperty>, enumTypesDictionary: {[ke
     if(p["x-ref"]) {
       result[name]["x-ref"] = p["x-ref"];
     }
+
+    if(p["description"]) {
+      result[name]["description"] = p["description"];
+    }
   })
 
   return result;
 }
 
-function edmTypeToSwaggerType(type: string): { isPrimitive: boolean, name: string } {
+export function edmTypeToSwaggerType(type: string): { isPrimitive: boolean, name: string } {
   let swaggerType;
 
   switch (type) {
@@ -1066,10 +1196,11 @@ function convert(allEntitySets: Array<EntitySet>, options: Options, oDataVersion
   return {
     swagger: '2.0',
     host: options.host,
+    schemes: options.schemes,
     produces: ['application/json'],
     basePath: options.basePath || '/',
     info: {
-      title: 'OData Service',
+      title: !!options.title?options.title:'OData Service',
       version: '0.0.1',
       ['x-odata-version']: oDataVersion
     },

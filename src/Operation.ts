@@ -7,4 +7,6 @@ export interface Operation {
   summary: string;
   parameters?: Array<Parameter>;
   responses: Responses;
+  description?:string;
+  summary?:string;
 }
